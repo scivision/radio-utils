@@ -32,7 +32,7 @@ class Link:
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
-    p = ArgumentParser(description='analyzes HST data and makes simulations')
+    p = ArgumentParser(description='trivial computation of free space loss -- no obstructions or fresnel zones are considered!')
     p.add_argument('range_m', type=float, help='range between tx/rx [meters]')
     p.add_argument('freq_hz', type=float, help='frequency [MHz]')
     p.add_argument('tx_dbm',type = float, help='TX power [dBm]')
