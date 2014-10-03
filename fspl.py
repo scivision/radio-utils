@@ -31,7 +31,7 @@ class Link:
         print('TX power {:0.1f}'.format(self.power_watts()) + ' watts')
         print('for Range [m]={:0.0f}'.format(self.range) +
               ' Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
-        print('maximum range {:0.1f}'.format(self.maxrange()/1e3) + ' km')
+#        print('maximum range {:0.1f}'.format(self.maxrange()/1e3) + ' km')
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
