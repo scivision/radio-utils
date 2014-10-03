@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import division
 from math import log10, pi
 
 class Link:
