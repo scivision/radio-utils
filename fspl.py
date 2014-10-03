@@ -15,6 +15,8 @@ class Link:
         return 10**((self.txpwr-30)/10)
     def freq_mhz(self):
         return self.freq/1e6
+    def freq_ghz(self):
+        return self.freq/1e9
     def fspl(self):
         return 20*log10(4*pi/self.c * self.range * self.freq)
     def linkbudget(self):
