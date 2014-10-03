@@ -7,6 +7,7 @@ class Link:
         self.freq = freq_hz
         self.txpwr = tx_dbm
         self.rxsens = rx_dbm
+        self.c = 299792458 #m/s
     def power_dbm(self):
         return self.txpwr
     def power_watts(self):
@@ -14,8 +15,7 @@ class Link:
     def freq_mhz(self):
         return self.freq/1e6
     def fspl(self):
-        c = 299792458 #m/s
-        return 20*log10(4*pi/c * self.range * self.freq)
+        return 20*log10(4*pi/self.c * self.range * self.freq)
     def linkbudget(self):
         return self.txpwr - self.fspl() - self.rxsens
     def linkreport(self):
