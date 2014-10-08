@@ -23,6 +23,7 @@ class Link:
         return self.txpwr - self.fspl() - self.rxsens
     def linkreport(self):
         print('link margin {:0.1f}'.format(self.linkbudget()) + ' dB ')
+        print('based on:')
         print('free space path loss {:0.1f}'.format(self.fspl()) + ' dB ')
         print('RX sensitivity {:0.1f}'.format(self.rxsens) + ' dBm')
         print('TX power {:0.3f}'.format(self.power_watts()) + ' watts')
