@@ -21,9 +21,6 @@ class Link:
         return 20*log10(4*pi/self.c * self.range * self.freq)
     def linkbudget(self):
         return self.txpwr - self.fspl() - self.rxsens
-    def maxrange(self):
-        pass
-        #return self.fspl() * (self.c/(4*pi*self.freq)**2)
     def linkreport(self):
         print('link margin {:0.1f}'.format(self.linkbudget()) + ' dB ')
         print('free space path loss {:0.1f}'.format(self.fspl()) + ' dB ')
@@ -31,7 +28,7 @@ class Link:
         print('TX power {:0.1f}'.format(self.power_watts()) + ' watts')
         print('for Range [m]={:0.0f}'.format(self.range) +
               ' Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
-#        print('maximum range {:0.1f}'.format(self.maxrange()/1e3) + ' km')
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
