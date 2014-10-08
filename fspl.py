@@ -25,7 +25,7 @@ class Link:
         print('link margin {:0.1f}'.format(self.linkbudget()) + ' dB ')
         print('free space path loss {:0.1f}'.format(self.fspl()) + ' dB ')
         print('RX sensitivity {:0.1f}'.format(self.rxsens) + ' dBm')
-        print('TX power {:0.1f}'.format(self.power_watts()) + ' watts')
+        print('TX power {:0.3f}'.format(self.power_watts()) + ' watts')
         print('for Range [m]={:0.0f}'.format(self.range) +
               ' Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
 
