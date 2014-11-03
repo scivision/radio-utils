@@ -1,45 +1,56 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+'''
+This may not be correct--something I dug up from long ago. 
+I would checkout Lathi's communications text or another reputable source
+'''
+from __future__ import division
 import numpy as np
 from numpy.fft import fft,fftshift
 from scipy.signal import hilbert,butter,lfilter,resample
-import matplotlib.pyplot as plt
+from matplotlib.pyplot import figure,show
 #from scikits.audiolab import play #only works with python 2.7 for me, bad sound
 import pygame
-import pdb
 from scipy.io.wavfile import read
-from os.path import expanduser
+from os.path import expanduser,splitext
+'''
+Pygame:
+http://stackoverflow.com/questions/7652385/where-can-i-find-and-install-the-dependencies-for-pygame
+sudo pip3 install --upgrade hg+http://bitbucket.org/pygame/pygame
+'''
 
-def main(wavFN):
-    mfs,mraw = read(expanduser(wavFN))
-        
+
+def main(wavfn,rxerr):
+    wavfn = expanduser(wavfn)
+    ext = splitext(wavfn)[1]
+    if ext !='.wav': raise NotImplementedError('only .wav files for now..')
+    mfs,mraw = read(expanduser(wavfn))
+    if mraw.ndim == 1: mraw = mraw[:,None]
         
     fc = 50e3  #Hz
     #fm = 500  #Hz
     fs = 350e3 #Hz
-    tend = 2.0
+    tend = 2
     pi = np.pi
     wc = 2*pi*fc
     pbfs = 44100
     
-    ts = 1./fs #sec
+    ts = 1/fs #sec
     
     t = np.arange(0,tend,ts)
-    ns = len(t)
+    ns = t.size
     nds = int(ns/(fs/pbfs)) #number of downsamples to take
     print(str(ns) + ' samples used')
     
-    mraw = mraw[...,0] #picks left channel
-    nm = len(mraw)
+    
     ncutsamples = int(mfs * tend)
     print(str(ncutsamples) + ' taken from original waveform')
-    mraw = mraw[:ncutsamples]
-    
+    mraw = mraw[:ncutsamples,0] #take left channel
     
     m,mt = resample(mraw,ns,t)
-    m = (m/32768.).astype(float)
+    m = (m/32768).astype(float) #normalize for 16 bit file
     
     #float32 was so noisy
-    f = np.linspace(0,fs/2,ns/2) #[Hz] for single-sided spectral plotting
+    f = np.linspace(0,fs/2,ns//2) #[Hz] for single-sided spectral plotting
     
     xc = np.cos(wc*t) #unmodulated carrier
     #m = np.cos(2*pi*fm*t) #modulation baseband
@@ -49,8 +60,7 @@ def main(wavFN):
     sm = m*xc #DSBSC
     Sm = fftshift(fft(sm))
     #%% demodulate SSB using filter method
-    rxferr = 0.
-    rm = sm * np.cos((wc+rxferr)*t) #perfect frequency sync
+    rm = sm * np.cos((wc+rxerr)*t) #perfect frequency sync
     Rm = fftshift(fft(rm))
     #design butterworth lpf
     b,a = butter(7,0.2,'low')
@@ -72,14 +82,14 @@ def main(wavFN):
         print('skipping audio playback due to error')   
         raise
     #%% plot
-    ax = plt.figure(3).gca()
+    ax = figure(3).gca()
     ax.plot(t,m)
     ax.set_title('modulation m(t)')
     ax.set_xlabel('time [sec]')
     ax.set_ylabel('amplitude')
     ax.grid(True)
     
-    ax = plt.figure(1).gca()
+    ax = figure(1).gca()
     ax.plot(f,20*np.log10(np.abs(Sm[ns/2:]))) #plot single-sided spectrum
     ax.set_xlabel('frequency [Hz]')
     ax.set_ylabel('Modulated waveform [dB]')
@@ -87,7 +97,7 @@ def main(wavFN):
     #plt.ylim((-100,150))
     ax.grid(True)
     
-    ax = plt.figure(2).gca()
+    ax = figure(2).gca()
     ax.plot(f,20*np.log10(np.abs(Rlpf[ns/2:])))
     ax.set_title('demodulated m spectrm')
     ax.set_xlabel('frequency [Hz]')
@@ -96,15 +106,20 @@ def main(wavFN):
     ax.grid(True)
     
     
-    ax = plt.figure(4).gca()
+    ax = figure(4).gca()
     ax.plot(trs,rlpfrs)
     ax.set_xlabel('time [sec]')
     ax.set_title('demodulated m(t)')
     ax.set_ylabel('amplitude')
     ax.grid(True)
     
-    plt.show()
+    show()
     
 if __name__ == '__main__':
-    wavfn = '~/MyVoice.wav'
-    main(wavfn)
+    from argparse import ArgumentParser
+    p = ArgumentParser(description='simulate SSB communication')    
+    p.add_argument('wavfn',help='.wav file to transmit/receive',type=str)
+    p.add_argument('-e','--rxerr',help='deliberate error in receive carrier frequency [Hz]',type=float,default=0)
+    a = p.parse_args()
+    
+    main(a.wavfn,a.rxerr)

@@ -3,3 +3,7 @@ radio-sim
 =========
 
 Collection of scripts over the years simulating radio communications
+
+fspl.py: Trivial implementation of free space path loss calcuation
+
+ssbmoddemod.py: simulated SSB transmitter and reciever, with optional frequency error
