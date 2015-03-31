@@ -78,9 +78,9 @@ def main(wavfn,rxerr):
         #sound = pygame.sndarray.make_sound((mraw).astype(np.int16))
         print('sound length ' + str(sound.get_length()) + ' seconds')
         sound.play(loops=0)
-    except:
-        print('skipping audio playback due to error')   
-        raise
+    except Exception as e:
+        print('skipping audio playback due to error')
+        print(str(e))   
     #%% plot
     ax = figure(3).gca()
     ax.plot(t,m)
