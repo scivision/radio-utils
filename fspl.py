@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import division
-from math import log10, pi
+from numpy import log10, pi
 
 class Link:
     def __init__(self,range_m,freq_hz,tx_dbm,rx_dbm):
