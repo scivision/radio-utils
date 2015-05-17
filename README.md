@@ -1,4 +1,6 @@
+[![Code Climate](https://codeclimate.com/github/scienceopen/radio-sim/badges/gpa.svg)](https://codeclimate.com/github/scienceopen/radio-sim)
 [![Health](https://landscape.io/github/scienceopen/radio-sim/master/landscape.png)](https://landscape.io/github/scienceopen/radio-sim/master)
+
 radio-sim
 =========
 
