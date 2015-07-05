@@ -1,0 +1,35 @@
+"""
+Bluetooth Low Energy propagation utilities
+
+These simple functions open up a large area of research, since they assume free space propagation,
+which is only mostly true in outer space. In reality, incredible amounts of multipath propagation
+lead to enhancements and cancellations of signal, which make Bluetooth Low Energy location a
+challenging problem, particularly if you need to do it in "real-time" with faster than walking speeds!
+
+Functions:
+dist2rssi: Assuming only free space (no reflections) propagation, what would RSSI be vs. distance,
+  for a given reference Bluetooth Low Energy transmitter power measurement (dBm) at
+  1 meter from the reference transmitter
+rssi2dist: given a reference transmitter power at 1 meter and the measured RSSI, and assuming
+  free space propagation (no reflections), what must the distance between TX-RX be?
+
+Michael Hirsch
+https://scivision.co
+"""
+
+from __future__ import division
+from numpy import log10
+from warnings import warn
+
+def dist2rssi(x,notionaltx=-14,freqMHz=2450):
+    """ compute Friis free space loss"""
+    return notionaltx-(20*log10(x) + 20*log10(freqMHz) -27.55)
+
+def rssi2dist(ctx,rssi,rexp=2):
+    ''' simple r^2 loss
+    ctx = transmitter EIRP [dBm] at 1 meter (reference quantity)
+    rs = rssi
+    '''
+    if ctx>10:
+        warn('does your BLE transmitter really give {} dBm at one meter distance?'.format(ctx))
+    return (10**((ctx-rssi)/10))**(1/rexp)
