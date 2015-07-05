@@ -28,7 +28,7 @@ def comprx(Pt_W, d):
     L = Link(d,2450e6,Pt_dbm)
     return Pt_dbm - L.fspl()
 
-def plotsig(x,d,Pr_dbm):
+def plotsig(x,y,d,Pr_dbm):
     fg,(ax1,ax2) = subplots(2,1,sharex=True)
 
     ax1.set_title('distance of receiver from transmitters,y='+str(y))
@@ -53,6 +53,6 @@ if __name__ == '__main__':
                                np.hypot(x,y[1])[:,None]))
 
     Pr_dbm = comprx(Pt_W=1e-4, d=dist)
-    plotsig(x,dist,Pr_dbm)
+    plotsig(x,y,dist,Pr_dbm)
 
     show()
