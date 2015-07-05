@@ -8,8 +8,7 @@ challenging problem, particularly if you need to do it in "real-time" with faste
 
 Functions:
 dist2rssi: Assuming only free space (no reflections) propagation, what would RSSI be vs. distance,
-  for a given reference Bluetooth Low Energy transmitter power measurement (dBm) at
-  1 meter from the reference transmitter
+  for a given reference Bluetooth Low Energy transmitter power measurement (dBm) power output in 50 ohms.
 rssi2dist: given a reference transmitter power at 1 meter and the measured RSSI, and assuming
   free space propagation (no reflections), what must the distance between TX-RX be?
 
@@ -22,14 +21,16 @@ from numpy import log10
 from warnings import warn
 
 def dist2rssi(x,notionaltx=-14,freqMHz=2450):
-    """ compute Friis free space loss"""
+    """ compute Friis free space loss
+    notionaltx: conducted transmit power [dBm] into 50 ohm load
+    """
     return notionaltx-(20*log10(x) + 20*log10(freqMHz) -27.55)
 
 def rssi2dist(ctx,rssi,rexp=2):
     ''' simple r^2 loss
-    ctx = transmitter EIRP [dBm] at 1 meter (reference quantity)
-    rs = rssi
+    ctx = transmitter EIRP [dBm] received at 1 meter (reference quantity)
+    rssi: currently received signal strength [dBm]
     '''
-    if ctx>10:
+    if ctx>0:
         warn('does your BLE transmitter really give {} dBm at one meter distance?'.format(ctx))
     return (10**((ctx-rssi)/10))**(1/rexp)
