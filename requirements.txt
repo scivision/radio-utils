@@ -1,5 +1,4 @@
-numpy>=1.5
-matplotlib>=1.0
-scipy>=0.10
-pygame>=1.9.1
-
+numpy
+matplotlib
+scipy
+pygame
