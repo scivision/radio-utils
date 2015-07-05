@@ -17,14 +17,17 @@ https://scivision.co
 """
 
 from __future__ import division
-from numpy import log10
 from warnings import warn
+try:
+    from .fspl import Link
+except:
+    from fspl import Link
 
-def dist2rssi(x,notionaltx=-14,freqMHz=2450):
+def dist2rssi(d,notionaltx=-14,freqHz=2450e6):
     """ compute Friis free space loss
     notionaltx: conducted transmit power [dBm] into 50 ohm load
     """
-    return notionaltx-(20*log10(x) + 20*log10(freqMHz) -27.55)
+    return notionaltx - Link(d,freqHz).fspl()
 
 def rssi2dist(ctx,rssi,rexp=2):
     ''' simple r^2 loss

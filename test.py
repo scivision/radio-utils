@@ -4,13 +4,18 @@ from numpy import isclose
 #
 try:
     from .distrssi import dist2rssi,rssi2dist
+    from .fspl import Link
 except:
     from distrssi import dist2rssi,rssi2dist
+    from fspl import Link
 
 def test_distrssi():
-    d = dist2rssi(x=10)
-    assert isclose(d, -74.2333216873)
+    assert isclose(dist2rssi(10),  -74.23110491)
     assert isclose(rssi2dist(ctx=-54,rssi=-74),10)
+
+def test_fspl():
+    assert isclose(Link(10,2450e6).fspl(), 60.23110491)
 
 if __name__ == '__main__':
     test_distrssi()
+    test_fspl()
