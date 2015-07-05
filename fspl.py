@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import division
-from numpy import log10, pi,atleast_1d
+from numpy import log10, pi,atleast_1d,nan
 
 class Link:
-    def __init__(self,range_m,freq_hz,tx_dbm,rx_dbm):
+    def __init__(self,range_m, freq_hz, tx_dbm=nan, rx_dbm=nan):
         self.range = atleast_1d(range_m)
         self.freq = freq_hz
         self.txpwr = tx_dbm
