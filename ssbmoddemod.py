@@ -8,6 +8,7 @@ from numpy import linspace,cos,pi,arange,int16,log10,absolute
 from numpy.fft import fft,fftshift
 from scipy.signal import hilbert,butter,lfilter,resample
 from matplotlib.pyplot import figure,show
+from warnings import warn
 #from scikits.audiolab import play #only works with python 2.7 for me, bad sound
 import pygame
 from scipy.io.wavfile import read
@@ -19,10 +20,10 @@ sudo pip3 install --upgrade hg+http://bitbucket.org/pygame/pygame
 '''
 
 
-def main(wavfn,rxerr):
+def ssbsim(wavfn,rxerr, doplot):
     wavfn = expanduser(wavfn)
     if not wavfn.endswith('.wav'):
-        print('only .wav files for now..')
+        warn('only .wav files for now..')
         return
     mfs,mraw = read(expanduser(wavfn))
     if mraw.ndim == 1: mraw = mraw[:,None]
@@ -68,58 +69,58 @@ def main(wavfn,rxerr):
     rlpf = lfilter(b,a,rm)
     Rlpf = fftshift(fft(rlpf))
     #%% play sound
-    try:
-        print(str(nds) + ' resampled samples used for audio playback')
-        rlpfrs,trs = resample(rlpf,nds,t)
-        #play(m,rate=44100) #garbage audiolab
-        pygame.mixer.pre_init(pbfs,size=-16,channels=1)
-        pygame.mixer.init()
-        sound = pygame.sndarray.make_sound((rlpfrs*32768).astype(int16))
-        #sound = pygame.sndarray.make_sound((mraw).astype(np.int16))
-        print('sound length ' + str(sound.get_length()) + ' seconds')
-        sound.play(loops=0)
-    except Exception as e:
-        print('skipping audio playback due to error')
-        print(str(e))
-    #%% plot
-    ax = figure(3).gca()
-    ax.plot(t,m)
-    ax.set_title('modulation m(t)')
-    ax.set_xlabel('time [sec]')
-    ax.set_ylabel('amplitude')
-    ax.grid(True)
+    if doplot:
+        try:
+            print(str(nds) + ' resampled samples used for audio playback')
+            rlpfrs,trs = resample(rlpf,nds,t)
+            #play(m,rate=44100) #garbage audiolab
+            pygame.mixer.pre_init(pbfs,size=-16,channels=1)
+            pygame.mixer.init()
+            sound = pygame.sndarray.make_sound((rlpfrs*32768).astype(int16))
+            #sound = pygame.sndarray.make_sound((mraw).astype(np.int16))
+            print('sound length ' + str(sound.get_length()) + ' seconds')
+            sound.play(loops=0)
+        except Exception as e:
+            warn('skipping audio playback due to error  {}'.format(e))
+        #%% plot
+        ax = figure(3).gca()
+        ax.plot(t,m)
+        ax.set_title('modulation m(t)')
+        ax.set_xlabel('time [sec]')
+        ax.set_ylabel('amplitude')
+        ax.grid(True)
 
-    ax = figure(1).gca()
-    ax.plot(f,20*log10(absolute(Sm[ns/2:]))) #plot single-sided spectrum
-    ax.set_xlabel('frequency [Hz]')
-    ax.set_ylabel('Modulated waveform [dB]')
-    ax.set_title('Transmitted Spectrum X(f)')
-    #plt.ylim((-100,150))
-    ax.grid(True)
+        ax = figure(1).gca()
+        ax.plot(f,20*log10(absolute(Sm[ns/2:]))) #plot single-sided spectrum
+        ax.set_xlabel('frequency [Hz]')
+        ax.set_ylabel('Modulated waveform [dB]')
+        ax.set_title('Transmitted Spectrum X(f)')
+        #plt.ylim((-100,150))
+        ax.grid(True)
 
-    ax = figure(2).gca()
-    ax.plot(f,20*log10(absolute(Rlpf[ns/2:])))
-    ax.set_title('demodulated m spectrm')
-    ax.set_xlabel('frequency [Hz]')
-    ax.set_ylabel('amplitude [dB]')
-    #ax.set_yscale('log')
-    ax.grid(True)
+        ax = figure(2).gca()
+        ax.plot(f,20*log10(absolute(Rlpf[ns/2:])))
+        ax.set_title('demodulated m spectrm')
+        ax.set_xlabel('frequency [Hz]')
+        ax.set_ylabel('amplitude [dB]')
+        #ax.set_yscale('log')
+        ax.grid(True)
 
-
-    ax = figure(4).gca()
-    ax.plot(trs,rlpfrs)
-    ax.set_xlabel('time [sec]')
-    ax.set_title('demodulated m(t)')
-    ax.set_ylabel('amplitude')
-    ax.grid(True)
-
-    show()
+        ax = figure(4).gca()
+        ax.plot(trs,rlpfrs)
+        ax.set_xlabel('time [sec]')
+        ax.set_title('demodulated m(t)')
+        ax.set_ylabel('amplitude')
+        ax.grid(True)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
     p = ArgumentParser(description='simulate SSB communication')
     p.add_argument('wavfn',help='.wav file to transmit/receive',type=str)
     p.add_argument('-e','--rxerr',help='deliberate error in receive carrier frequency [Hz]',type=float,default=0)
+    p.add_argument('--noplot',help='disable media (typ. for selftest)',action='store_false')
     a = p.parse_args()
 
-    main(a.wavfn,a.rxerr)
+    ssbsim(a.wavfn,a.rxerr, a.noplot)
+
+    show()
