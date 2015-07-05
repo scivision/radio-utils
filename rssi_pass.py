@@ -10,6 +10,7 @@ from __future__ import division
 import numpy as np
 from matplotlib.pyplot import show,subplots
 import seaborn as sns
+sns.set_context('poster')
 #
 try:
     from .fspl import Link
@@ -28,6 +29,9 @@ def comprx(Pt_W, d):
     L = Link(d,2450e6,Pt_dbm)
     return Pt_dbm - L.fspl()
 
+def add_noise(sig,var):
+    return sig + var*np.random.standard_normal(sig.shape)
+
 def plotsig(x,y,d,Pr_dbm):
     fg,(ax1,ax2) = subplots(2,1,sharex=True)
 
@@ -39,20 +43,29 @@ def plotsig(x,y,d,Pr_dbm):
 
 
     ax2.plot(x,Pr_dbm)
-    ax2.set_title('Power received, y='+str(y),fontsize=18)
-    ax2.set_ylabel('$P_R$ [dBm]',fontsize=16)
-    ax2.set_xlabel('x-location [m]',fontsize=16)
+    ax2.set_title('Power received, y='+str(y))
+    ax2.set_ylabel('$P_R$ [dBm]')
+    ax2.set_xlabel('x-location [m]')
    # ax2.legend(loc='best')
     ax2.grid(True)
 
 if __name__ == '__main__':
-    x = x = np.linspace(-10.,10., 500)
-    y=[3,5.5] #distance from transmitter at closest approach [m]
+    from argparse import ArgumentParser
+    p = ArgumentParser(description='Shows free space RSSI vs. simultaneous parallel tracks')
+    p.add_argument('xm',help='start stop step values of x-displacement [m]',nargs=3,type=float)
+    p.add_argument('-y','--ym',help='y-offset [m] (closest approach to TX',nargs='+',type=float,default=[1])
+    p.add_argument('-n','--noisevar',help='variance of noise (dB) to add',type=float,default=0)
+    p=p.parse_args()
 
-    dist = np.hstack((np.hypot(x,y[0])[:,None],
-                               np.hypot(x,y[1])[:,None]))
+
+    x = np.arange(p.xm[0],p.xm[1],p.xm[2])
+    y = np.atleast_1d(p.ym)
+
+    dist = np.hypot(x[:,None],y[None,:])
 
     Pr_dbm = comprx(Pt_W=1e-4, d=dist)
+    Pr_dbm = add_noise(Pr_dbm,p.noisevar)
+
     plotsig(x,y,dist,Pr_dbm)
 
     show()
