@@ -1,5 +1,5 @@
-[![Code Climate](https://codeclimate.com/github/scienceopen/radio-sim/badges/gpa.svg)](https://codeclimate.com/github/scienceopen/radio-sim)
-[![Health](https://landscape.io/github/scienceopen/radio-sim/master/landscape.png)](https://landscape.io/github/scienceopen/radio-sim/master)
+[![Code Climate](https://codeclimate.com/github/scienceopen/radioutils/badges/gpa.svg)](https://codeclimate.com/github/scienceopen/radioutils)
+[![Health](https://landscape.io/github/scienceopen/radioutils/master/landscape.png)](https://landscape.io/github/scienceopen/radioutils/master)
 [![Build Status](https://travis-ci.org/scienceopen/radioutils.svg?branch=master)](https://travis-ci.org/scienceopen/radioutils)
 [![Coverage Status](https://coveralls.io/repos/scienceopen/radioutils/badge.svg)](https://coveralls.io/r/scienceopen/radioutils)
 
