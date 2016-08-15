@@ -17,20 +17,21 @@ Installation:
 -------------
 [Install PyGame](https://scivision.co/python-pygame-installation/)
 
-```
-git clone --depth 1 https://github.com/scienceopen/radio-sim
-```
+
+    python setup.py develop
 
 Demo:
 -----
 SSB modulation / demodulation of a piano note.  You can use the -e option to introduce a "mistuned" receiver frequency.
-```
-wget http://www.kozco.com/tech/piano2.wav
-python ssbmoddemod.py piano2.wav
-```
+
+    wget http://www.kozco.com/tech/piano2.wav
+    
+    python ssbmoddemod.py piano2.wav
+
+
 
 1km link at 902MHz with 10mW EIRP transmit power and -85dBm receive threshold with 0dBi antenna
-```
-python fspl.py -h
-python fspl.py 1e3 902e6 10 -85
-```
+
+    python free_space_loss.py -h
+    python fspl.py 1e3 902e6 10 -85
+
