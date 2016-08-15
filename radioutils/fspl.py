@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 from __future__ import division
 from numpy import log10, pi,atleast_1d,nan
 
@@ -29,15 +29,3 @@ class Link:
         print('TX power {} watts'.format(self.power_watts()) )
         print('for Range [m]= '+str(self.range) + '  Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
 
-
-if __name__ == '__main__':
-    from argparse import ArgumentParser
-
-    p = ArgumentParser(description='trivial computation of free space loss -- no obstructions or fresnel zones are considered!')
-    p.add_argument('-d','--range_m', type=float, help='range between tx/rx [meters]',nargs='+',required=True)
-    p.add_argument('-f','--freq_hz', type=float, help='frequency [Hz]',default=2450e6)
-    p.add_argument('-t','--tx_dbm',type = float, help='TX power [dBm]',default=-10.)
-    p.add_argument('-r','--rx_dbm',type = float, help='RX sensitivity [dBm]',default=-90.)
-    ar = p.parse_args()
-
-    Link(ar.range_m,ar.freq_hz,ar.tx_dbm,ar.rx_dbm).linkreport()

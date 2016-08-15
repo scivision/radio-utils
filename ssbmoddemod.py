@@ -1,7 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 '''
-This may not be correct--something I dug up from long ago.
-I would checkout Lathi's communications text or another reputable source
+Single sideband modulation and demodulatoin
+Refer to Lathi's communications text or another reputable source
+
+https://scivision.co/python-pygame-installation/
 '''
 from __future__ import division
 from numpy import linspace,cos,pi,arange,int16,log10,absolute
@@ -13,18 +15,13 @@ from warnings import warn
 import pygame
 from scipy.io.wavfile import read
 from os.path import expanduser
-'''
-Pygame:
-http://stackoverflow.com/questions/7652385/where-can-i-find-and-install-the-dependencies-for-pygame
-sudo pip3 install --upgrade hg+http://bitbucket.org/pygame/pygame
-'''
+
 
 
 def ssbsim(wavfn,rxerr, doplot):
     wavfn = expanduser(wavfn)
     if not wavfn.endswith('.wav'):
-        warn('only .wav files for now..')
-        return
+        raise NotImplementedError('only .wav files for now..')
     mfs,mraw = read(expanduser(wavfn))
     if mraw.ndim == 1: mraw = mraw[:,None]
 

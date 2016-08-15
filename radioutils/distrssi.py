@@ -18,10 +18,8 @@ https://scivision.co
 
 from __future__ import division
 from warnings import warn
-try:
-    from .fspl import Link
-except:
-    from fspl import Link
+
+from radioutils.fspl import Link
 
 def dist2rssi(d,notionaltx=-14,freqHz=2450e6):
     """ compute Friis free space loss

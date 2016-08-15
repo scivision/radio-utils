@@ -12,10 +12,7 @@ from matplotlib.pyplot import show,subplots
 import seaborn as sns
 sns.set_context('poster')
 #
-try:
-    from .fspl import Link
-except:
-    from fspl import Link
+from radioutils.fspl import Link
 
 def comprx(Pt_W, d):
     """
