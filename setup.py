@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 from setuptools import setup
-import subprocess
-
 try:
-    subprocess.call(['conda','install','--file','requirements.txt'])
-except Exception:
-    pass
+    import conda.cli
+    conda.cli.main('install','--file','requirements.txt')
+except Exception as e:
+    print(e)
 
 setup(name='radioutils',
-	  description='Radio simulation utilities',
-	  url='https://github.com/scienceopen/radioutils',
-	  install_requires=['pathlib2'],
       packages=['radioutils'],
 	  )

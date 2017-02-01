@@ -6,6 +6,7 @@ Refer to Lathi's communications text or another reputable source
 https://scivision.co/python-pygame-installation/
 '''
 from __future__ import division
+from pathlib import Path
 from numpy import linspace,cos,pi,arange,int16,log10,absolute
 from numpy.fft import fft,fftshift
 from scipy.signal import hilbert,butter,lfilter,resample
@@ -14,15 +15,14 @@ from warnings import warn
 #from scikits.audiolab import play #only works with python 2.7 for me, bad sound
 import pygame
 from scipy.io.wavfile import read
-from os.path import expanduser
 
 
 
 def ssbsim(wavfn,rxerr, doplot):
-    wavfn = expanduser(wavfn)
-    if not wavfn.endswith('.wav'):
+    wavfn = Path(wavfn).expanduser()
+    if not wavfn.suffix == '.wav':
         raise NotImplementedError('only .wav files for now..')
-    mfs,mraw = read(expanduser(wavfn))
+    mfs,mraw = read(str(wavfn))
     if mraw.ndim == 1: mraw = mraw[:,None]
 
     fc = 50e3  #Hz
