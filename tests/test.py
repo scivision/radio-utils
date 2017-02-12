@@ -3,7 +3,7 @@
 from numpy import isclose
 
 from radioutils.distrssi import dist2rssi,rssi2dist
-from radioutils.fspl import Link
+from radioutils import Link
 
 
 def test_distrssi():

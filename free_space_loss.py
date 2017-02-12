@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from radioutils.fspl import Link
+from radioutils import Link
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

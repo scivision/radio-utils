@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 from setuptools import setup
-try:
-    import conda.cli
-    conda.cli.main('install','--file','requirements.txt')
-except Exception as e:
-    print(e)
+
+req = ['numpy','matplotlib','scipy','nose','seaborn']
 
 setup(name='radioutils',
       packages=['radioutils'],
+      author='Michael Hirsch Ph.D.',
+      url='https://github.com/scienceopen/radioutils',
 	  )

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """ michael hirsch
 1-D simulation of free-space propagation--signal strength differences with omni antennas
 and devices passing at different closest approach distances
@@ -12,7 +12,7 @@ from matplotlib.pyplot import show,subplots
 import seaborn as sns
 sns.set_context('poster')
 #
-from radioutils.fspl import Link
+from radioutils import Link
 
 def comprx(Pt_W, d):
     """

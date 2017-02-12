@@ -1,10 +1,10 @@
 """
 Bluetooth Low Energy propagation utilities
 
-These simple functions open up a large area of research, since they assume free space propagation,
-which is only mostly true in outer space. In reality, incredible amounts of multipath propagation
-lead to enhancements and cancellations of signal, which make Bluetooth Low Energy location a
-challenging problem, particularly if you need to do it in "real-time" with faster than walking speeds!
+These simple functions assume free space propagation, which is only mostly true in outer space. 
+In reality, incredible amounts of multipath propagation lead to enhancements and cancellations of signal, 
+which make Bluetooth Low Energy location a challenging problem, 
+particularly if you need to do it in "real-time" with faster than walking speeds!
 
 Functions:
 dist2rssi: Assuming only free space (no reflections) propagation, what would RSSI be vs. distance,
@@ -19,7 +19,7 @@ https://scivision.co
 from __future__ import division
 from warnings import warn
 
-from radioutils.fspl import Link
+from . import Link
 
 def dist2rssi(d,notionaltx=-14,freqHz=2450e6):
     """ compute Friis free space loss
