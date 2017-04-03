@@ -5,6 +5,8 @@ req = ['numpy','matplotlib','scipy','nose','seaborn']
 
 setup(name='radioutils',
       packages=['radioutils'],
-      author='Michael Hirsch Ph.D.',
+      author='Michael Hirsch, Ph.D.',
       url='https://github.com/scivision/radioutils',
+      install_requires=req,
+      version='1.0',
 	  )
