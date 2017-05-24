@@ -21,7 +21,8 @@ Installation:
 
 Demo:
 -----
-SSB modulation / demodulation of a piano note.  You can use the -e option to introduce a "mistuned" receiver frequency.
+SSB modulation / demodulation of a piano note.  
+You can use the -e option to introduce a "mistuned" receiver frequency.::
 
     wget http://www.kozco.com/tech/piano2.wav
     
@@ -29,7 +30,7 @@ SSB modulation / demodulation of a piano note.  You can use the -e option to int
 
 
 
-1km link at 902MHz with 10mW EIRP transmit power and -85dBm receive threshold with 0dBi antenna
+1km link at 902MHz with 10mW EIRP transmit power and -85dBm receive threshold with 0dBi antenna::
 
     python free_space_loss.py -h
     python fspl.py 1e3 902e6 10 -85
