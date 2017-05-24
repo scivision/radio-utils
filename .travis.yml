@@ -9,10 +9,6 @@ notifications:
 git:
   depth: 3
 
-addons:
-  apt:
-    packages:
-      - gfortran
 
 before_install:
     - if [[ $TRAVIS_OS_NAME == osx ]]; then
