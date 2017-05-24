@@ -1,7 +1,14 @@
 #!/usr/bin/env python
-from setuptools import setup
-
 req = ['numpy','matplotlib','scipy','nose','seaborn']
+
+import pip
+try:
+    import conda.cli
+    conda.cli.main('install',*req)
+except ImportError:    
+    pip.main(['install'] + req)
+# %%
+from setuptools import setup
 
 setup(name='radioutils',
       packages=['radioutils'],
