@@ -6,7 +6,9 @@
 radio-sim
 =========
 
-Collection of scripts over the years simulating radio communications
+Collection of scripts over the years simulating radio communications (commericial and amateur radio). 
+Python scripts by Michael Hirsch, Ph.D.
+Pascal code in the `Pascal <Pascal/>`_ directory by other authors, see `Pascal/README.rst <Pascal/README.rst>`_
 
 fspl.py: Trivial implementation of free space path loss calcuation
 
