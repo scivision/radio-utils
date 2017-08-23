@@ -30,10 +30,10 @@ class Link:
         print('for Range [m]= '+str(self.range) + '  Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
 
 #def am_demod(sig, fs:int, fc:float=10e3):
-def am_demod(sig, fs, fc=10e3):
+def am_demod(sig, fs, fsaudio, fc=10e3):
     """
     inputs:
-    -------
+    -------,
     sig: downconverted (baseband) signal, normally containing amplitude-modulated information with carrier
     fs: sampling frequency [Hz]
 
@@ -44,8 +44,11 @@ def am_demod(sig, fs, fc=10e3):
 # %% ideal diode: half-wave rectifier
     diode_out = sig * sig>0
 # %% low-pass filter
+    assert fc < 0.5*fsaudio,'aliasing due to filter cutoff > 0.5*fs'
     b = lpf_design(fs,fc)
-    return signal.lfilter(b,1,diode_out)
+    lpf_out = signal.lfilter(b,1,diode_out)
+# %% resample
+    return signal.resample(lpf_out, int(lpf_out.size*fsaudio/fs))
 
 #def lpf_design(fs:int, fc:float, L:int):
 def lpf_design(fs, fc, L=50):
@@ -60,4 +63,4 @@ def lpf_design(fs, fc, L=50):
 
     # 0.8*fc is arbitrary, for finite transition width
 
-    return signal.remez(L, [0, 0.8*fc, fc, 0.5], [0, 1], Hz=fs)
+    return signal.remez(L, [0, 0.8*fc, fc, 0.5*fs], [1., 0.], Hz=fs)
