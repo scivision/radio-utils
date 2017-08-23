@@ -1,5 +1,6 @@
 from __future__ import division
 from numpy import log10, pi,atleast_1d,nan
+import scipy.signal as signal
 
 class Link:
     def __init__(self,range_m, freq_hz, tx_dbm=nan, rx_dbm=nan):
@@ -28,3 +29,35 @@ class Link:
         print('TX power {} watts'.format(self.power_watts()) )
         print('for Range [m]= '+str(self.range) + '  Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
 
+#def am_demod(sig, fs:int, fc:float=10e3):
+def am_demod(sig, fs, fc=10e3):
+    """
+    inputs:
+    -------
+    sig: downconverted (baseband) signal, normally containing amplitude-modulated information with carrier
+    fs: sampling frequency [Hz]
+
+    outputs:
+    --------
+    msg: demodulated audio.
+    """
+# %% ideal diode: half-wave rectifier
+    diode_out = sig * sig>0
+# %% low-pass filter
+    b = lpf_design(fs,fc)
+    return signal.lfilter(b,1,diode_out)
+
+#def lpf_design(fs:int, fc:float, L:int):
+def lpf_design(fs, fc, L=50):
+    """
+    Design FIR low-pass filter coefficients "b" using Remez algorithm
+    fc: cutoff frequency [Hz]
+    fs: sampling frequency [Hz]
+    L: number of taps (more taps->narrower transition band->more CPU)
+
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.remez.html
+    """
+
+    # 0.8*fc is arbitrary, for finite transition width
+
+    return signal.remez(L, [0, 0.8*fc, fc, 0.5], [0, 1], Hz=fs)
