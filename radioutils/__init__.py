@@ -1,5 +1,5 @@
 from __future__ import division
-from numpy import log10, pi,atleast_1d,nan
+from numpy import log10, pi,atleast_1d,nan,sqrt
 import scipy.signal as signal
 
 class Link:
@@ -40,15 +40,20 @@ def am_demod(sig, fs, fsaudio, fc=10e3):
     outputs:
     --------
     msg: demodulated audio.
+
+    Reference: https://www.mathworks.com/help/dsp/examples/envelope-detection.html
     """
 # %% ideal diode: half-wave rectifier
-    diode_out = sig * sig>0
-# %% low-pass filter
+    s = sig**2 * 2
+# %% low-pass filter (and anti-aliasing)
     assert fc < 0.5*fsaudio,'aliasing due to filter cutoff > 0.5*fs'
     b = lpf_design(fs,fc)
-    lpf_out = signal.lfilter(b,1,diode_out)
+    s = signal.lfilter(b,1, s)
 # %% resample
-    return signal.resample(lpf_out, int(lpf_out.size*fsaudio/fs))
+    s = signal.resample(s, int(s.size*fsaudio/fs))
+    s = sqrt(s).astype(sig.dtype)
+
+    return s
 
 #def lpf_design(fs:int, fc:float, L:int):
 def lpf_design(fs, fc, L=50):
