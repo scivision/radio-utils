@@ -1,6 +1,8 @@
 from __future__ import division
-from numpy import log10, pi,atleast_1d,nan,sqrt
+from numpy import log10, pi,atleast_1d,nan,sqrt,arange,exp
 import scipy.signal as signal
+#
+from .plots import plotfir
 
 class Link:
     def __init__(self,range_m, freq_hz, tx_dbm=nan, rx_dbm=nan):
@@ -30,12 +32,16 @@ class Link:
         print('for Range [m]= '+str(self.range) + '  Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
 
 #def am_demod(sig, fs:int, fc:float=10e3):
-def am_demod(sig, fs, fsaudio, fc=10e3):
+def am_demod(sig, fs, fsaudio, fcutoff=10e3, verbose=False):
     """
+    Envelope demodulates AM with carrier (DSB or SSB)
+
     inputs:
     -------,
     sig: downconverted (baseband) signal, normally containing amplitude-modulated information with carrier
     fs: sampling frequency [Hz]
+    fsaudio: local sound card sampling frequency for audio playback [Hz]
+    fcutoff: cutoff frequency of output lowpass filter [Hz]
 
     outputs:
     --------
@@ -46,20 +52,87 @@ def am_demod(sig, fs, fsaudio, fc=10e3):
 # %% ideal diode: half-wave rectifier
     s = sig**2 * 2
 # %% low-pass filter (and anti-aliasing)
-    assert fc < 0.5*fsaudio,'aliasing due to filter cutoff > 0.5*fs'
-    b = lpf_design(fs,fc)
-    s = signal.lfilter(b,1, s)
+    assert fcutoff < 0.5*fsaudio,'aliasing due to filter cutoff > 0.5*fs'
+    b = bpf_design(fs, fcutoff)
+    s = signal.lfilter(b, 1, s)
 # %% resample
     s = signal.resample(s, int(s.size*fsaudio/fs))
     s = sqrt(s).astype(sig.dtype)
 
+    if verbose:
+        plotfir(b, fs)
+
     return s
 
+def ssb_demod(sig, fs, fsaudio, fx, fcutoff=5e3, verbose=False):
+    """
+    filter method SSB/DSB suppressed carrier demodulation
+
+    sig: downconverted (baseband) signal, normally containing amplitude-modulated information
+    fs: sampling frequency [Hz]
+    fsaudio: local sound card sampling frequency for audio playback [Hz]
+    fx: supressed carrier frequency (a priori)
+    fcutoff: cutoff frequency of output lowpass filter [Hz]
+    """
+# %% assign elapsed time vector
+    tend = sig.size / fs # end time [sec]
+    t = arange(0, tend, 1/fs)
+# %% SSB demod
+    bx = exp(1j*2*pi*fx*t)
+    sig *= bx[:sig.size]
+# %% filter
+    L = 100 # arbitrary
+    b = bpf_design(fs,fcutoff=10e3,t=t*-)
+    sig = signal.lfilter(b, 1, sig)
+
+    if verbose:
+        plotfir(b, fs)
+
+    return sig, t
+
+
+def freq_translate(sig, fx:float, fs:int, decim: int):
+
+# %% frequency translate
+    if fx is not None:
+        bx = exp(1j*2*pi*fx*t)
+        sig *= bx[:sig.size] # downshifted
+# %% decimate
+    sig, t = decim_sig(sig,fs,decim)
+    return sig, t
+
+def decim_sig(sig,fs,decim):
+    Ntaps = 100 # arbitrary
+    # %% assign elapsed time vector
+    tend = sig.size / fs # end time [sec]
+    t = arange(0, tend, 1/fs)
+
+    if decim is not None:
+        sig = signal.decimate(sig, decim, Ntaps, 'fir', zero_phase=True)
+        t = t[::decim]
+
+    return sig,t
+
+
 #def lpf_design(fs:int, fc:float, L:int):
-def lpf_design(fs, fc, L=50):
+def lpf_design(fs, fcutoff, L=50):
     """
     Design FIR low-pass filter coefficients "b" using Remez algorithm
-    fc: cutoff frequency [Hz]
+    fcutoff: cutoff frequency [Hz]
+    fs: sampling frequency [Hz]
+    L: number of taps (more taps->narrower transition band->more CPU)
+
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.remez.html
+    """
+    # 0.8*fc is arbitrary, for finite transition width
+
+    #return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
+    return signal.firwin(L, fcutoff, nyq=0.5*fs)
+
+def bpf_design(fs, fcutoff, L=256):
+    """
+    Design FIR low-pass filter coefficients "b" using Remez algorithm
+    fcutoff: cutoff frequency [Hz]
     fs: sampling frequency [Hz]
     L: number of taps (more taps->narrower transition band->more CPU)
 
@@ -68,4 +141,15 @@ def lpf_design(fs, fc, L=50):
 
     # 0.8*fc is arbitrary, for finite transition width
 
-    return signal.remez(L, [0, 0.8*fc, fc, 0.5*fs], [1., 0.], Hz=fs)
+    #return signal.remez(L, [0, 200, 300,0.8*fcutoff, fcutoff, 0.5*fs],
+    #                    [0.,1., 0.], Hz=fs)
+
+    b= signal.firwin(L, [300,fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
+                         window='kaiser', scale=True)
+
+    #from oct2py import Oct2Py
+    #oc = Oct2Py()
+    #oc.eval('pkg load signal')
+    #b = oc.fir1(L, [0.03,0.35],'bandpass')
+
+    return b
