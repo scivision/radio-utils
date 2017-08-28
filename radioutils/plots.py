@@ -19,12 +19,17 @@ def plot_fmbaseband(sig, fs:int):
     """
     inputs:
     -------
-    sig: NBFM or WBFM signal
+    sig: baseband of FM signal (after discriminator)
     fs: sampling freq. [Hz]
     """
+    t = np.arange(0, sig.size / fs, 1/fs)
 
-    sig = fs/(2*np.pi) * np.diff(np.unwrap(np.angle(sig)))
-
+    ax = figure().gca()
+    ax.plot(t,sig)
+    ax.set_xlabel('time [sec]')
+    ax.set_ylabel('amplitude')
+    ax.set_title('FM baseband')
+#%%
     fg = figure()
     ax = fg.gca()
 

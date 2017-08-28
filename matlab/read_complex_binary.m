@@ -28,8 +28,7 @@ function v = read_complex_binary (filename, count,start)
     end
     v = fread (f, [2, count], 'float32=>float32');
     fclose (f);
-    % have to do this transpose to column major or Matlab will be horribly slow.
-    v = (v(1,:) + v(2,:)*1i).'; 
-    [r, c] = size (v);
-    v = reshape (v, c, r);
+    % have to be column major or Matlab will be horribly slow.
+    v = (v(1,:) + v(2,:)*1i); 
+    v = v(:);
   end

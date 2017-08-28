@@ -151,12 +151,14 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
 
     Reference: https://www.mathworks.com/help/dsp/examples/envelope-detection.html
     """
-# %% resample
-    sig = signal.resample(sig, int(sig.size*fsaudio/fs))
 # %% low-pass filter
     assert fcutoff < 0.5*fsaudio,'aliasing due to filter cutoff > 0.5*fs'
     b = bpf_design(fs, fcutoff)
     sig = signal.lfilter(b, 1, sig)
+# %% resample
+    decim = int(fs/fsaudio)
+    print('downsampling by factor of',decim)
+    sig = signal.decimate(sig, decim, zero_phase=True)
 # %% ideal diode: half-wave rectifier
     sig = 2*(sig**2)
     sig = np.sqrt(sig).astype(sig.dtype)
@@ -166,15 +168,19 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
 
     return sig
 
-def fm_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
+def fm_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, fmdev=75e3, verbose:bool=False):
+    """
+    fmdev: FM deviation of monaural modulation in Hz  (for scaling)
+    """
 
     if isinstance(sig, Path):
         sig,t = loadbin(sig, fs)
 
-    sig = fs/(2*np.pi) * np.diff(np.unwrap(np.angle(sig)))
+    baseband = fs/(2*np.pi * fmdev) * np.diff(np.unwrap(np.angle(sig)))
 
-    return am_demod(sig,
-                    fs, fsaudio, fcutoff, verbose)
+    m = am_demod(baseband, fs, fsaudio, fcutoff, verbose)
+
+    return m, baseband
 
 
 def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:bool=False):
@@ -217,8 +223,7 @@ def freq_translate(sig, fx:float, fs:int, decim: int):
 def decim_sig(sig,fs,decim):
     Ntaps = 100 # arbitrary
     # %% assign elapsed time vector
-    tend = sig.size / fs # end time [sec]
-    t = np.arange(0, tend, 1/fs)
+    t = np.arange(0, sig.size / fs, 1/fs)
 
     if decim is not None:
         sig = signal.decimate(sig, decim, Ntaps, 'fir', zero_phase=True)
