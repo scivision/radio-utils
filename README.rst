@@ -1,7 +1,7 @@
-.. image:: https://travis-ci.org/scivision/radioutils.svg?branch=master
-    :target: https://travis-ci.org/scivision/radioutils
-.. image:: https://coveralls.io/repos/scivision/radioutils/badge.svg
-    :target: https://coveralls.io/r/scivision/radioutils
+.. image:: https://travis-ci.org/scivision/radio-utils.svg?branch=master
+    :target: https://travis-ci.org/scivision/radio-utils
+.. image:: https://coveralls.io/repos/scivision/radio-utils/badge.svg
+    :target: https://coveralls.io/r/scivision/radio-utils
 
 radio-sim
 =========
