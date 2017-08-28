@@ -22,6 +22,7 @@ def plot_fmbaseband(sig, fs:int):
     sig: baseband of FM signal (after discriminator)
     fs: sampling freq. [Hz]
     """
+#%% demodulated audio
     t = np.arange(0, sig.size / fs, 1/fs)
 
     ax = figure().gca()
@@ -29,7 +30,8 @@ def plot_fmbaseband(sig, fs:int):
     ax.set_xlabel('time [sec]')
     ax.set_ylabel('amplitude')
     ax.set_title('FM baseband')
-#%%
+    ax.grid(True)
+#%% spectrogram
     fg = figure()
     ax = fg.gca()
 
@@ -39,7 +41,7 @@ def plot_fmbaseband(sig, fs:int):
     ax.set_title('WBFM baseband multiplex')
     ax.set_ylabel('frequency [Hz]')
     ax.set_xlabel('time [sec]')
-#%%
+#%% periodogram
     fg = figure()
     ax = fg.gca()
 
@@ -48,11 +50,11 @@ def plot_fmbaseband(sig, fs:int):
                 window = 'hann',
 #                    noverlap=Nol,
                 #nfft=Nfft,
-                return_onesided=False
+                return_onesided=True
                 )
 
     ax.plot(f,10*np.log10(Sp))
     ax.set_ylabel('PSD [dB/Hz]')
     ax.set_xlabel('frequency [Hz]')
-
-    ax.set_title('WBFM baseband multiplex')
+    ax.set_title('WBFM baseband multiplex: periodogram')
+    ax.grid(True)
