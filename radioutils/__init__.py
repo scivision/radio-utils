@@ -1,12 +1,17 @@
 from pathlib import Path
-from numpy import log10, pi,atleast_1d,nan,sqrt,arange,exp,diff
+import warnings
+import numpy as np
 import scipy.signal as signal
+try:
+    import pygame
+except ImportError:
+    pygame = None
 #
 from .plots import plotfir, plot_fmbaseband
 
 class Link:
-    def __init__(self,range_m, freq_hz, tx_dbm=nan, rx_dbm=nan):
-        self.range = atleast_1d(range_m)
+    def __init__(self,range_m, freq_hz, tx_dbm=None, rx_dbm=None):
+        self.range = np.atleast_1d(range_m)
         self.freq = freq_hz
         self.txpwr = tx_dbm
         self.rxsens = rx_dbm
@@ -20,9 +25,10 @@ class Link:
     def freq_ghz(self):
         return self.freq / 1e9
     def fspl(self):
-        return 20*log10(4*pi / self.c * self.range * self.freq)
+        return 20 * np.log10(4*np.pi / self.c * self.range * self.freq)
     def linkbudget(self):
-        return self.txpwr - self.fspl() - self.rxsens
+        if self.rxsens is not None:
+            return self.txpwr - self.fspl() - self.rxsens
     def linkreport(self):
         print(f'link margin {self.linkbudget()} dB ')
         print('based on isotropic 0 dBi gain antennas and:')
@@ -31,7 +37,68 @@ class Link:
         print(f'TX power {self.power_watts()} watts')
         print(f'for Range [m]= {self.range}  Frequency [MHz]={self.freq_mhz():0.1f}')
 
-def loadbin(fn:Path, fs:int, tlim=None, fx0=None, decim=None):
+
+def playaudio(dat, fs:int, ofn:Path=None):
+    """
+    playback radar data using PyGame audio
+    """
+    if dat is None:
+        return
+
+    fs = int(fs)
+# %% rearrange sound array to [N,2] for Numpy playback/writing
+    if isinstance(dat.dtype,np.int16):
+        odtype = dat.dtype
+        fnorm = 32768
+    elif isinstance(dat.dtype,np.int8):
+        odtype = dat.dtype
+        fnorm = 128
+    elif dat.dtype in ('complex128','float64'):
+        odtype = np.float64
+        fnorm = 1.0
+    elif dat.dtype in ('complex64', 'float32'):
+        odtype = np.float32
+        fnorm = 1.0
+    else:
+        raise TypeError(f'unknown input type {dat.dtype}')
+
+    if np.iscomplexobj(dat):
+        snd = np.empty((dat.size,2),dtype=odtype)
+        snd[:,0] = dat.real
+        snd[:,1] = dat.imag
+    else:
+        snd = dat  # monaural
+
+    snd = snd * fnorm / snd.max()
+# %% optional write wav file
+    if ofn:
+        ofn = Path(ofn).expanduser()
+        if not ofn.is_file():
+            import scipy.io.wavfile
+            print('writing audio to',ofn)
+            scipy.io.wavfile.write(ofn, fs, snd)
+        else:
+            warnings.warn(f'did NOT overwrite existing {ofn}')
+# %% play sound
+    if 100e3 > fs > 1e3:
+        Nloop = 0
+        if pygame is None:
+            warnings.info('audio playback disabled')
+            return
+
+        assert snd.ndim in (1,2), 'mono or stereo Nx2'
+
+        # scale to pygame required int16 format
+        fnorm = 32768 / snd.max()
+        pygame.mixer.pre_init(fs, size=-16, channels=snd.ndim)
+        pygame.mixer.init()
+        sound = pygame.sndarray.make_sound((snd * fnorm).astype(np.int16))
+
+        sound.play(loops=Nloop)
+    else:
+        print(f'skipping playback due to fs={fs} Hz')
+
+def loadbin(fn:Path, fs:int, tlim=(0,None), fx0=None, decim=None):
     """
     we assume PiRadar has single-precision complex floating point data
     Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
@@ -53,7 +120,7 @@ def loadbin(fn:Path, fs:int, tlim=None, fx0=None, decim=None):
 
     with fn.open('rb') as f:
         f.seek(startbyte)
-        sig = np.fromfile(f,'complex64', count)
+        sig = np.fromfile(f,np.complex64, count)
 
     assert sig.ndim==1, 'file read incorrectly'
     assert sig.size > 0, 'read past end of file, did you specify incorrect time limits?'
@@ -63,9 +130,9 @@ def loadbin(fn:Path, fs:int, tlim=None, fx0=None, decim=None):
     conserve RAM and CPU in later steps.
     """
 
-    dat, t = freq_translate(sig, fx0, fs, decim)
+    sig, t = freq_translate(sig, fx0, fs, decim)
 
-    return dat, t
+    return sig, t
 
 def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
     """
@@ -84,27 +151,29 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
 
     Reference: https://www.mathworks.com/help/dsp/examples/envelope-detection.html
     """
-# %% ideal diode: half-wave rectifier
-    s = sig**2 * 2
-# %% low-pass filter (and anti-aliasing)
+# %% resample
+    sig = signal.resample(sig, int(sig.size*fsaudio/fs))
+# %% low-pass filter
     assert fcutoff < 0.5*fsaudio,'aliasing due to filter cutoff > 0.5*fs'
     b = bpf_design(fs, fcutoff)
-    s = signal.lfilter(b, 1, s)
-# %% resample
-    s = signal.resample(s, int(s.size*fsaudio/fs))
-    s = sqrt(s).astype(sig.dtype)
+    sig = signal.lfilter(b, 1, sig)
+# %% ideal diode: half-wave rectifier
+    sig = 2*(sig**2)
+    sig = np.sqrt(sig).astype(sig.dtype)
 
     if verbose:
         plotfir(b, fs)
 
-    return s
+    return sig
 
 def fm_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
 
     if isinstance(sig, Path):
-        sig = loadbin(sig, fs)
+        sig,t = loadbin(sig, fs)
 
-    return am_demod(diff(sig),
+    sig = fs/(2*np.pi) * np.diff(np.unwrap(np.angle(sig)))
+
+    return am_demod(sig,
                     fs, fsaudio, fcutoff, verbose)
 
 
@@ -119,10 +188,9 @@ def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:boo
     fcutoff: cutoff frequency of output lowpass filter [Hz]
     """
 # %% assign elapsed time vector
-    tend = sig.size / fs # end time [sec]
-    t = arange(0, tend, 1/fs)
+    t = np.arange(0, sig.size / fs, 1/fs)
 # %% SSB demod
-    bx = exp(1j*2*pi*fx*t)
+    bx = np.exp(1j*2*np.pi*fx*t)
     sig *= bx[:sig.size]
 # %% filter
     L = 100 # arbitrary
@@ -136,10 +204,11 @@ def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:boo
 
 
 def freq_translate(sig, fx:float, fs:int, decim: int):
-
+# %% assign elapsed time vector
+    t = np.arange(0, sig.size / fs, 1/fs)
 # %% frequency translate
     if fx is not None:
-        bx = exp(1j*2*pi*fx*t)
+        bx = np.exp(1j*2*np.pi*fx*t)
         sig *= bx[:sig.size] # downshifted
 # %% decimate
     sig, t = decim_sig(sig,fs,decim)
@@ -149,7 +218,7 @@ def decim_sig(sig,fs,decim):
     Ntaps = 100 # arbitrary
     # %% assign elapsed time vector
     tend = sig.size / fs # end time [sec]
-    t = arange(0, tend, 1/fs)
+    t = np.arange(0, tend, 1/fs)
 
     if decim is not None:
         sig = signal.decimate(sig, decim, Ntaps, 'fir', zero_phase=True)

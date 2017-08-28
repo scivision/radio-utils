@@ -1,5 +1,5 @@
 from matplotlib.pyplot import figure
-from numpy import pi,log10,diff
+import numpy as np
 import scipy.signal as signal
 
 def plotfir(b,fs):
@@ -7,7 +7,7 @@ def plotfir(b,fs):
     w, h = signal.freqz(b, worN=2048)
 
     ax = figure().gca()
-    ax.semilogx(fs*0.5/pi*w, 20*log10(abs(h)))
+    ax.semilogx(fs*0.5/np.pi*w, 20*np.log10(abs(h)))
     ax.set_title('filter frequency response')
     ax.set_xlabel('Frequency [Hz]')
     ax.set_ylabel('Amplitude [dB]')
@@ -22,12 +22,32 @@ def plot_fmbaseband(sig, fs:int):
     sig: NBFM or WBFM signal
     fs: sampling freq. [Hz]
     """
-    bb = diff(sig)
+
+    sig = fs/(2*np.pi) * np.diff(np.unwrap(np.angle(sig)))
 
     fg = figure()
     ax = fg.gca()
-    hi = ax.specgram(bb, Fs=fs,  vmin=-100)[-1]
-    ax.set_ylabel('Frequency [Hz]')
-    ax.set_xlabel('Time [sec]')
-    ax.set_title('WBFM baseband multiplex')
+
+    hi = ax.specgram(sig,
+                     Fs=fs,  vmin=-100)[-1]
     fg.colorbar(hi,ax=ax)
+    ax.set_title('WBFM baseband multiplex')
+    ax.set_ylabel('frequency [Hz]')
+    ax.set_xlabel('time [sec]')
+#%%
+    fg = figure()
+    ax = fg.gca()
+
+    f,Sp = signal.welch(sig, fs,
+                #nperseg=Nfft,
+                window = 'hann',
+#                    noverlap=Nol,
+                #nfft=Nfft,
+                return_onesided=False
+                )
+
+    ax.plot(f,10*np.log10(Sp))
+    ax.set_ylabel('PSD [dB/Hz]')
+    ax.set_xlabel('frequency [Hz]')
+
+    ax.set_title('WBFM baseband multiplex')
