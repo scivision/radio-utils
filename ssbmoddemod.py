@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Single sideband modulation and demodulatoin
+Single sideband modulation and demodulation
 Refer to Lathi's communications text or another reputable source
 
 https://scivision.co/python-pygame-installation/
@@ -60,7 +60,7 @@ def ssbsim(wavfn,rxerr, doplot):
     #%% demodulate SSB using filter method
     rm = sm * cos((wc+rxerr)*t) #perfect frequency sync
     Rm = fftshift(fft(rm))
-    #design butterworth lpf
+    #design butterworth lpf  (use FIR for real systems)
     b,a = butter(7,0.2,'low')
     #filter output
     rlpf = lfilter(b,a,rm)
@@ -70,7 +70,7 @@ def ssbsim(wavfn,rxerr, doplot):
         try:
             print(nds, 'resampled samples used for audio playback')
             rlpfrs,trs = resample(rlpf,nds,t)
-            #play(m,rate=44100) #garbage audiolab
+
             pygame.mixer.pre_init(fsaudio, size=-16, channels=1)
             pygame.mixer.init()
             sound = pygame.sndarray.make_sound((rlpfrs*32768).astype(int16))

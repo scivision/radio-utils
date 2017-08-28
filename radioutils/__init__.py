@@ -1,8 +1,8 @@
-from __future__ import division
-from numpy import log10, pi,atleast_1d,nan,sqrt,arange,exp
+from pathlib import Path
+from numpy import log10, pi,atleast_1d,nan,sqrt,arange,exp,diff
 import scipy.signal as signal
 #
-from .plots import plotfir
+from .plots import plotfir, plot_fmbaseband
 
 class Link:
     def __init__(self,range_m, freq_hz, tx_dbm=nan, rx_dbm=nan):
@@ -10,29 +10,64 @@ class Link:
         self.freq = freq_hz
         self.txpwr = tx_dbm
         self.rxsens = rx_dbm
-        self.c = 299792458 #m/s
+        self.c = 299792458. #m/s
     def power_dbm(self):
         return self.txpwr
     def power_watts(self):
-        return 10**((self.txpwr-30)/10)
+        return 10.**((self.txpwr - 30) / 10.)
     def freq_mhz(self):
-        return self.freq/1e6
+        return self.freq / 1e6
     def freq_ghz(self):
-        return self.freq/1e9
+        return self.freq / 1e9
     def fspl(self):
-        return 20*log10(4*pi/self.c * self.range * self.freq)
+        return 20*log10(4*pi / self.c * self.range * self.freq)
     def linkbudget(self):
         return self.txpwr - self.fspl() - self.rxsens
     def linkreport(self):
-        print('link margin ' + str(self.linkbudget()) + ' dB ')
-        print('based on isotropic 0dBi gain antennas and:')
-        print('free space path loss ' + str(self.fspl()) + ' dB .')
-        print('RX sensitivity {:0.1f} dBm'.format(self.rxsens))
-        print('TX power {} watts'.format(self.power_watts()) )
-        print('for Range [m]= '+str(self.range) + '  Frequency [MHz]={:0.1f}'.format(self.freq_mhz()))
+        print(f'link margin {self.linkbudget()} dB ')
+        print('based on isotropic 0 dBi gain antennas and:')
+        print(f'free space path loss {self.fspl()} dB .')
+        print(f'RX sensitivity {self.rxsens:0.1f} dBm')
+        print(f'TX power {self.power_watts()} watts')
+        print(f'for Range [m]= {self.range}  Frequency [MHz]={self.freq_mhz():0.1f}')
 
-#def am_demod(sig, fs:int, fc:float=10e3):
-def am_demod(sig, fs, fsaudio, fcutoff=10e3, verbose=False):
+def loadbin(fn:Path, fs:int, tlim=None, fx0=None, decim=None):
+    """
+    we assume PiRadar has single-precision complex floating point data
+    Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
+    complex64 means single-precision complex floating-point data I + jQ.
+
+    We don't load the whole file by default, because it can greatly exceed PC RAM.
+    """
+    Lbytes = 8  # 8 bytes per single-precision complex
+    fn = Path(fn).expanduser()
+
+    startbyte = int(Lbytes * tlim[0] * fs)
+    assert startbyte % 8 == 0,'must have multiple of 8 bytes or entire file is read incorrectly'
+
+    if tlim[1] is not None:
+        assert len(tlim) == 2,'specify start and end times'
+        count = int((tlim[1] - tlim[0]) * fs)
+    else: # read rest of file from startbyte
+        count = -1 # count=None is not accepted
+
+    with fn.open('rb') as f:
+        f.seek(startbyte)
+        sig = np.fromfile(f,'complex64', count)
+
+    assert sig.ndim==1, 'file read incorrectly'
+    assert sig.size > 0, 'read past end of file, did you specify incorrect time limits?'
+
+    """
+    It is useful to frequency translate and downsample the .bin file to drastically
+    conserve RAM and CPU in later steps.
+    """
+
+    dat, t = freq_translate(sig, fx0, fs, decim)
+
+    return dat, t
+
+def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
     """
     Envelope demodulates AM with carrier (DSB or SSB)
 
@@ -64,7 +99,16 @@ def am_demod(sig, fs, fsaudio, fcutoff=10e3, verbose=False):
 
     return s
 
-def ssb_demod(sig, fs, fsaudio, fx, fcutoff=5e3, verbose=False):
+def fm_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
+
+    if isinstance(sig, Path):
+        sig = loadbin(sig, fs)
+
+    return am_demod(diff(sig),
+                    fs, fsaudio, fcutoff, verbose)
+
+
+def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:bool=False):
     """
     filter method SSB/DSB suppressed carrier demodulation
 
@@ -82,7 +126,7 @@ def ssb_demod(sig, fs, fsaudio, fx, fcutoff=5e3, verbose=False):
     sig *= bx[:sig.size]
 # %% filter
     L = 100 # arbitrary
-    b = bpf_design(fs,fcutoff=10e3,t=t*-)
+    b = bpf_design(fs,fcutoff=10e3)
     sig = signal.lfilter(b, 1, sig)
 
     if verbose:
