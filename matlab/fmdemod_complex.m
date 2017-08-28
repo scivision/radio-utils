@@ -1,4 +1,4 @@
-function z = fmdemod_complex(y,fs,fc,fmdev)
+function [m,t] = fmdemod_complex(y,fs,fc,fmdev)
 %FMDEMOD Frequency demodulation of complex IQ baseband.
 
 if ~isvector(y)
@@ -7,13 +7,12 @@ end
 
 y = y(:);
 
+t =(0:length(y)-1)/fs;
 %% freq shift if necessary
 if ~isempty(fc)
-    t =(0:length(y)-1)/fs;
     y = y .* exp(-1j*2*pi*fc*t).';
     disp(['used carrier offset [Hz]',num2str(fc)])
 end
 %% fm demodulation
-z = (fs/(2*pi*fmdev)) * [0; diff(unwrap(angle(y)))];
-
+m = fs/(2*pi*fmdev) * [0; diff(unwrap(angle(y)))];
 end

@@ -21,17 +21,10 @@ def main(fn:Path, fs:int, tlim:tuple):
 
     sig,t = loadbin(fn, fs, tlim)
 
-    m, baseband = fm_demod(sig, fs, fsaudio, fmdev=100e3)
+    m,baseband = fm_demod(sig, fs, fsaudio, fcutoff=15e3, fmdev=75e3)
     playaudio(m, fsaudio)
 
     plot_fmbaseband(baseband, fs)
-
-    ax = figure().gca()
-    ax.plot(t[::5],m)
-    ax.set_title('modulation')
-    ax.set_xlabel('time')
-    ax.set_ylabel('amplitude')
-
 
 
 
