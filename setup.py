@@ -23,5 +23,5 @@ setup(name='radioutils',
       'Programming Language :: Python :: 3',
       ],
       install_requires=req,
-      version='1.0.1',
+      version='1.1.0',
 	  )

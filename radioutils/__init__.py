@@ -134,7 +134,7 @@ def loadbin(fn:Path, fs:int, tlim=(0,None), fx0=None, decim=None):
 
     return sig, t
 
-def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
+def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=0., verbose:bool=False):
     """
     Envelope demodulates AM with carrier (DSB or SSB)
 
@@ -144,6 +144,7 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
     fs: sampling frequency [Hz]
     fsaudio: local sound card sampling frequency for audio playback [Hz]
     fcutoff: cutoff frequency of output lowpass filter [Hz]
+    frumble: optional cutoff freq for carrier beating removal [Hz]
 
     outputs:
     --------
@@ -153,10 +154,14 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
     """
     sig = downsample(sig, fs, fsaudio, verbose)
 
-    sig = lpf_filter(sig, fs, fcutoff, verbose)
+    # reject signals outside our channel bandwidth
+    sig = final_filter(sig, fsaudio, fcutoff, ftype='lpf', verbose=verbose)
 # %% ideal diode: half-wave rectifier
     sig = 2*(sig**2)
     sig = np.sqrt(sig).astype(sig.dtype)
+
+    if frumble:
+        sig = final_filter(sig, fsaudio, frumble, ftype='hpf', verbose=verbose)
 
     return sig
 
@@ -234,7 +239,7 @@ def decim_sig(sig,fs,decim):
 #def lpf_design(fs:int, fc:float, L:int):
 def lpf_design(fs, fcutoff, L=50):
     """
-    Design FIR low-pass filter coefficients "b" using Remez algorithm
+    Design FIR low-pass filter coefficients "b"
     fcutoff: cutoff frequency [Hz]
     fs: sampling frequency [Hz]
     L: number of taps (more taps->narrower transition band->more CPU)
@@ -244,11 +249,27 @@ def lpf_design(fs, fcutoff, L=50):
     # 0.8*fc is arbitrary, for finite transition width
 
     #return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
-    return signal.firwin(L, fcutoff, nyq=0.5*fs)
+    return signal.firwin(L, fcutoff, nyq=0.5*fs, pass_zero=True)
+
+def hpf_design(fs, fcutoff, L=199):
+    """
+    Design FIR high-pass filter coefficients "b"
+    fcutoff: cutoff frequency [Hz]
+    fs: sampling frequency [Hz]
+    L: number of taps (more taps->narrower transition band->more CPU)
+
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.remez.html
+    """
+    # 0.8*fc is arbitrary, for finite transition width
+
+    #return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
+    return signal.firwin(L, fcutoff, nyq=0.5*fs, pass_zero=False,
+                         width=10, window='kaiser',scale=True)
+
 
 def bpf_design(fs, fcutoff, flow=300.,L=256):
     """
-    Design FIR low-pass filter coefficients "b" using Remez algorithm
+    Design FIR bandpass filter coefficients "b"
     fcutoff: cutoff frequency [Hz]
     fs: sampling frequency [Hz]
     flow: low cutoff freq [Hz] to eliminate rumble or beating carriers
@@ -272,24 +293,24 @@ def bpf_design(fs, fcutoff, flow=300.,L=256):
 
     return b
 
-def lpf_filter(sig, fs:int, fcutoff:float, verbose:bool=False):
+def final_filter(sig, fs:int, fcutoff:float, ftype:str, verbose:bool=False):
 
     assert fcutoff < 0.5*fs,'aliasing due to filter cutoff > 0.5*fs'
-    b = lpf_design(fs, fcutoff)
+
+    if ftype=='lpf':
+        b = lpf_design(fs, fcutoff)
+    elif ftype=='bpf':
+        b = bpf_design(fs, fcutoff)
+    elif ftype=='hpf':
+        b = hpf_design(fs, fcutoff)
+    else:
+        raise ValueError(f'Unknown filter type {ftype}')
+
     sig = signal.lfilter(b, 1, sig)
 
     if verbose:
+        print(ftype,' filter cutoff [Hz] ',fcutoff)
         plotfir(b, fs)
 
     return sig
 
-def bpf_filter(sig, fs:int, fcutoff:float, verbose:bool=False):
-
-    assert fcutoff < 0.5*fs,'aliasing due to filter cutoff > 0.5*fs'
-    b = bpf_design(fs, fcutoff)
-    sig = signal.lfilter(b, 1, sig)
-
-    if verbose:
-        plotfir(b, fs)
-
-    return sig
