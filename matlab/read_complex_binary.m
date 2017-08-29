@@ -8,14 +8,14 @@ function v = read_complex_binary (filename, count,start)
 %
 %  open filename and return the contents as a column vector,
 %  treating them as 32 bit complex numbers
-%
+Lbyte = 8;  % complex64 data
 
  narginchk (1,3)
  
-  if nargin < 2
+  if nargin < 2 || isempty(count)
     count = Inf;
   end
-  if nargin < 3
+  if nargin < 3 || isempty(start)
     start = [];
   end
 
@@ -24,7 +24,7 @@ function v = read_complex_binary (filename, count,start)
     error([filename,' not found'])
   else
     if ~isempty(start)
-        fseek(f,(start-1)*4*2,'bof');
+        fseek(f,(start-1)*Lbyte,'bof');
     end
     v = fread (f, [2, count], 'float32=>float32');
     fclose (f);

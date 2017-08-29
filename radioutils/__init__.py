@@ -134,7 +134,7 @@ def loadbin(fn:Path, fs:int, tlim=(0,None), fx0=None, decim=None):
 
     return sig, t
 
-def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=0., verbose:bool=False):
+def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=None, verbose:bool=False):
     """
     Envelope demodulates AM with carrier (DSB or SSB)
 
@@ -154,17 +154,13 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=0., ver
     """
  #   if verbose:
 #        plotraw(sig, fs)
-
     sig = downsample(sig, fs, fsaudio, verbose)
-
     # reject signals outside our channel bandwidth
     sig = final_filter(sig, fsaudio, fcutoff, ftype='lpf', verbose=verbose)
 # %% ideal diode: half-wave rectifier
-    sig = 2*(sig**2)
-    sig = np.sqrt(sig).astype(sig.dtype)
-
-    if frumble:
-        sig = final_filter(sig, fsaudio, frumble, ftype='hpf', verbose=verbose)
+    sig = sig**2
+#%% optional rumble filter
+    sig = final_filter(sig, fsaudio, frumble, ftype='hpf', verbose=verbose)
 
     return sig
 
@@ -172,7 +168,8 @@ def downsample(sig, fs:int, fsaudio:int, verbose:bool=False):
 # %% resample
     decim = int(fs/fsaudio)
     print('downsampling by factor of',decim)
-    sig = signal.decimate(sig, decim, zero_phase=True)
+    dtype = sig.dtype
+    sig = signal.decimate(sig, decim, zero_phase=True).astype(dtype)
 
     return sig
 
@@ -297,6 +294,8 @@ def bpf_design(fs, fcutoff, flow=300.,L=256):
     return b
 
 def final_filter(sig, fs:int, fcutoff:float, ftype:str, verbose:bool=False):
+    if fcutoff is None:
+        return sig
 
     assert fcutoff < 0.5*fs,'aliasing due to filter cutoff > 0.5*fs'
 
