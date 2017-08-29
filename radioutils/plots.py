@@ -14,6 +14,16 @@ def plotfir(b,fs):
     ax.grid(which='both', axis='both')
     ax.set_ylim((-70,None))
 
+def plotraw(sig, fs:int, Nraw:int=10000):
+    t = np.arange(0, sig.size/fs, 1/fs)
+
+    ax = figure().gca()
+    ax.plot(t[:Nraw], sig[:Nraw].real, 'b')
+
+    ax.set_title('raw waveform preview')
+    ax.set_xlabel('time [sec]')
+    ax.set_ylabel('amplitude')
+
 
 def plot_fmbaseband(sig, fs:int):
     """

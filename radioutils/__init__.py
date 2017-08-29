@@ -7,7 +7,7 @@ try:
 except ImportError:
     pygame = None
 #
-from .plots import plotfir, plot_fmbaseband
+from .plots import plotfir,plotraw
 
 class Link:
     def __init__(self,range_m, freq_hz, tx_dbm=None, rx_dbm=None):
@@ -152,6 +152,9 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=0., ver
 
     Reference: https://www.mathworks.com/help/dsp/examples/envelope-detection.html
     """
+ #   if verbose:
+#        plotraw(sig, fs)
+
     sig = downsample(sig, fs, fsaudio, verbose)
 
     # reject signals outside our channel bandwidth
