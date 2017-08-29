@@ -83,7 +83,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
     if 100e3 > fs > 1e3:
         Nloop = 0
         if pygame is None:
-            warnings.info('audio playback disabled')
+            warnings.info('audio playback disabled due to missing Pygame')
             return
 
         assert snd.ndim in (1,2), 'mono or stereo Nx2'

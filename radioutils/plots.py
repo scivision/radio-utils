@@ -23,7 +23,7 @@ def plot_fmbaseband(sig, fs:int):
     fs: sampling freq. [Hz]
     """
 #%% demodulated audio
-    t = np.arange(0, sig.size / fs, 1/fs)
+    t = np.arange(0., sig.size / fs, 1/fs)
 
     ax = figure().gca()
     ax.plot(t,sig)
