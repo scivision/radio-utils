@@ -13,7 +13,15 @@ from setuptools import setup
 setup(name='radioutils',
       packages=['radioutils'],
       author='Michael Hirsch, Ph.D.',
+      description='Low-level radio communications modeling utilities including demodulation of GNU Radio data',
       url='https://github.com/scivision/radioutils',
+      classifiers=[
+      'Intended Audience :: Science/Research',
+      'Development Status :: 4 - Beta',
+      'License :: OSI Approved :: MIT License',
+      'Topic :: Scientific/Engineering :: Mathematics',
+      'Programming Language :: Python :: 3',
+      ],
       install_requires=req,
-      version='1.0',
+      version='1.0.1',
 	  )

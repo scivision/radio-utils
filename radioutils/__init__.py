@@ -120,9 +120,9 @@ def loadbin(fn:Path, fs:int, tlim=(0,None), fx0=None, decim=None):
 
     with fn.open('rb') as f:
         f.seek(startbyte)
-        sig = np.fromfile(f,np.complex64, count)
+        sig = np.fromfile(f, np.complex64, count)
 
-    assert sig.ndim==1, 'file read incorrectly'
+    assert sig.ndim == 1 and np.iscomplexobj(sig), 'file read incorrectly'
     assert sig.size > 0, 'read past end of file, did you specify incorrect time limits?'
 
     """
@@ -151,22 +151,16 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, verbose:bool=False):
 
     Reference: https://www.mathworks.com/help/dsp/examples/envelope-detection.html
     """
-    sig = downsample(sig, fs, fsaudio, fcutoff, verbose)
+    sig = downsample(sig, fs, fsaudio, verbose)
+
+    sig = lpf_filter(sig, fs, fcutoff, verbose)
 # %% ideal diode: half-wave rectifier
     sig = 2*(sig**2)
     sig = np.sqrt(sig).astype(sig.dtype)
 
     return sig
 
-def downsample(sig, fs:int, fsaudio:int, fcutoff:float=10e3, antialias:bool=True, verbose:bool=False):
-# %% low-pass filter
-    if antialias:
-        assert fcutoff < 0.5*fsaudio,'aliasing due to filter cutoff > 0.5*fs'
-        b = bpf_design(fs, fcutoff)
-        sig = signal.lfilter(b, 1, sig)
-
-        if verbose:
-            plotfir(b, fs)
+def downsample(sig, fs:int, fsaudio:int, verbose:bool=False):
 # %% resample
     decim = int(fs/fsaudio)
     print('downsampling by factor of',decim)
@@ -174,18 +168,23 @@ def downsample(sig, fs:int, fsaudio:int, fcutoff:float=10e3, antialias:bool=True
 
     return sig
 
-def fm_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, fmdev=75e3, verbose:bool=False):
+def fm_demod(sig, fs:int, fsaudio:int, fmdev=75e3, verbose:bool=False):
     """
+    currently this function discards all but the monaural audio.
+
     fmdev: FM deviation of monaural modulation in Hz  (for scaling)
     """
     if isinstance(sig, Path):
         sig,t = loadbin(sig, fs)
 
-    sig = fs/(2*np.pi * fmdev) * np.diff(np.unwrap(np.angle(sig)))
+    # FM is a time integral, angle modulation--so let's undo the FM
+    Cfm = fs/(2*np.pi * fmdev)  # a scalar constant
+    sig = Cfm * np.diff(np.unwrap(np.angle(sig)))
 
-    m = downsample(sig, fs, fsaudio, fcutoff)
+    # demodulated monoaural audio (plain audio waveform)
+    m = downsample(sig, fs, fsaudio, verbose)
 
-    return m,sig
+    return m, sig
 
 
 def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:bool=False):
@@ -201,17 +200,12 @@ def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:boo
 # %% assign elapsed time vector
     t = np.arange(0, sig.size / fs, 1/fs)
 # %% SSB demod
-    bx = np.exp(1j*2*np.pi*fx*t)
-    sig *= bx[:sig.size]
-# %% filter
-    L = 100 # arbitrary
-    b = bpf_design(fs,fcutoff=10e3)
-    sig = signal.lfilter(b, 1, sig)
+    bx = np.exp(-1j*2*np.pi*fx*t)
+    sig *= bx[:sig.size] # sometimes length was off by one
 
-    if verbose:
-        plotfir(b, fs)
+    sig = downsample(sig, fs, fsaudio, fcutoff, verbose)
 
-    return sig, t
+    return sig
 
 
 def freq_translate(sig, fx:float, fs:int, decim: int):
@@ -252,11 +246,12 @@ def lpf_design(fs, fcutoff, L=50):
     #return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
     return signal.firwin(L, fcutoff, nyq=0.5*fs)
 
-def bpf_design(fs, fcutoff, L=256):
+def bpf_design(fs, fcutoff, flow=300.,L=256):
     """
     Design FIR low-pass filter coefficients "b" using Remez algorithm
     fcutoff: cutoff frequency [Hz]
     fs: sampling frequency [Hz]
+    flow: low cutoff freq [Hz] to eliminate rumble or beating carriers
     L: number of taps (more taps->narrower transition band->more CPU)
 
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.remez.html
@@ -267,7 +262,7 @@ def bpf_design(fs, fcutoff, L=256):
     #return signal.remez(L, [0, 200, 300,0.8*fcutoff, fcutoff, 0.5*fs],
     #                    [0.,1., 0.], Hz=fs)
 
-    b= signal.firwin(L, [300,fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
+    b= signal.firwin(L, [flow,fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
                          window='kaiser', scale=True)
 
     #from oct2py import Oct2Py
@@ -276,3 +271,25 @@ def bpf_design(fs, fcutoff, L=256):
     #b = oc.fir1(L, [0.03,0.35],'bandpass')
 
     return b
+
+def lpf_filter(sig, fs:int, fcutoff:float, verbose:bool=False):
+
+    assert fcutoff < 0.5*fs,'aliasing due to filter cutoff > 0.5*fs'
+    b = lpf_design(fs, fcutoff)
+    sig = signal.lfilter(b, 1, sig)
+
+    if verbose:
+        plotfir(b, fs)
+
+    return sig
+
+def bpf_filter(sig, fs:int, fcutoff:float, verbose:bool=False):
+
+    assert fcutoff < 0.5*fs,'aliasing due to filter cutoff > 0.5*fs'
+    b = bpf_design(fs, fcutoff)
+    sig = signal.lfilter(b, 1, sig)
+
+    if verbose:
+        plotfir(b, fs)
+
+    return sig
