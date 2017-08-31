@@ -1,4 +1,4 @@
-function RXplot(fn,fs,modtype,tss)
+function RXplot(fn,fs,modtype,tss,fc)
 % AM/FM demodulation and plotting of baseband multiplex spectrum
 % Michael Hirsch, Ph.D.
 %
@@ -14,7 +14,6 @@ end
   
 nbits=16;
 fsaudio = 48e3; % arbitrary for your soundcard
-fc = [];  % frequency offset from center ( [] to ignore)
 fmdev = 75e3; % scales audio by initial modulation
 %% demodulation for complex signal
 % NOTE: didn't filter cause assuming Nyquist bandwidth just enough for one
@@ -22,7 +21,7 @@ fmdev = 75e3; % scales audio by initial modulation
 decim = fix(fs/fsaudio);
 
 lstart = []; lcount = [];
-if nargin>3
+if nargin>3 && ~isempty(tss)
   if length(tss)>=1
     lstart = fix(tss(1)*fs);
   end
@@ -34,7 +33,7 @@ sig = read_complex_binary(fn, lcount, lstart);
 
 switch lower(modtype)
     case 'fm'
-        [m,t] = fmdemod_complex(sig,fs, fc, fmdev);
+        [m,t] = fmdemod_complex(sig, fs, fc, fmdev);
     case 'am'
         [m,t] = amdemod_complex(sig, fs, fc);
     otherwise
@@ -48,6 +47,9 @@ plot(t(1:decim:end),m)
 xlabel('time [sec]')
 ylabel('amplitude')
 title([upper(modtype),' demodulated audio'])
+
+figure(2),clf(2)
+pwelch(sig,[],[],[],fs,'centered')
 %% audio playback
 % normalize so that you can hear it
 m = m/max(m);
