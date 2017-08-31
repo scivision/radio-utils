@@ -21,9 +21,9 @@ def main(fn:Path, fs:int, fc:float, tlim:tuple):
 # %%
     sig = loadbin(fn, fs, tlim)
 # %% freq translate and decimate
-    sig, t = freq_translate(sig, fc, fs)
+    sig = freq_translate(sig, fc, fs)
 # %%
-    m, baseband = fm_demod(sig, fs, fsaudio, fmdev=75e3)
+    m, baseband = fm_demod(sig, fs, fsaudio, fc, fmdev=75e3)
     playaudio(m, fsaudio)
 
     plot_fmbaseband(baseband, fs)

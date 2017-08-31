@@ -127,7 +127,7 @@ def loadbin(fn:Path, fs:int, tlim=(0,None)):
 
     return sig
 
-def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=None, verbose:bool=False):
+def am_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=10e3, frumble:float=None, verbose:bool=False):
     """
     Envelope demodulates AM with carrier (DSB or SSB).
     Assumes desired AM signal is centered at zero baseband freq.
@@ -146,8 +146,13 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=None, v
 
     Reference: https://www.mathworks.com/help/dsp/examples/envelope-detection.html
     """
+    if isinstance(sig, Path):
+        sig = loadbin(sig, fs)
  #   if verbose:
 #        plotraw(sig, fs)
+
+    sig = freq_translate(sig, fc, fs)
+
     sig = downsample(sig, fs, fsaudio, verbose)
     # reject signals outside our channel bandwidth
     sig = final_filter(sig, fsaudio, fcutoff, ftype='lpf', verbose=verbose)
@@ -171,22 +176,20 @@ def downsample(sig, fs:int, fsaudio:int, verbose:bool=False):
     sig = signal.decimate(sig, decim, zero_phase=True).astype(dtype)
 
     return sig
-# %% resample
 
 
-    dtype = sig.dtype
-    sig = signal.decimate(sig, decim, zero_phase=True).astype(dtype)
-
-    return sig
-
-def fm_demod(sig, fs:int, fsaudio:int, fmdev=75e3, verbose:bool=False):
+def fm_demod(sig, fs:int, fsaudio:int, fc:float, fmdev=75e3, verbose:bool=False):
     """
     currently this function discards all but the monaural audio.
 
     fmdev: FM deviation of monaural modulation in Hz  (for scaling)
     """
     if isinstance(sig, Path):
-        sig,t = loadbin(sig, fs)
+        sig = loadbin(sig, fs)
+
+    sig = freq_translate(sig, fc, fs)
+# %% reject signals outside our channel bandwidth
+    sig = final_filter(sig, fs, fmdev*1.5, ftype='lpf', verbose=verbose)
 
     # FM is a time integral, angle modulation--so let's undo the FM
     Cfm = fs/(2*np.sqrt(2)*np.pi * fmdev)  # a scalar constant
@@ -199,20 +202,22 @@ def fm_demod(sig, fs:int, fsaudio:int, fmdev=75e3, verbose:bool=False):
     return m, sig
 
 
-def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:bool=False):
+def ssb_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=5e3, verbose:bool=False):
     """
     filter method SSB/DSB suppressed carrier demodulation
 
     sig: downconverted (baseband) signal, normally containing amplitude-modulated information
     fs: sampling frequency [Hz]
     fsaudio: local sound card sampling frequency for audio playback [Hz]
-    fx: supressed carrier frequency (a priori)
+    fc: supressed carrier frequency (a priori)
     fcutoff: cutoff frequency of output lowpass filter [Hz]
     """
+    if isinstance(sig, Path):
+        sig = loadbin(sig, fs)
 # %% assign elapsed time vector
     t = np.arange(0, sig.size / fs, 1/fs)
 # %% SSB demod
-    bx = np.exp(1j*2*np.pi*fx*t)
+    bx = np.exp(1j*2*np.pi*fc*t)
     sig *= bx[:sig.size] # sometimes length was off by one
 
     sig = downsample(sig, fs, fsaudio, fcutoff, verbose)
@@ -228,7 +233,7 @@ def freq_translate(sig, fc:float, fs:int):
         bx = np.exp(1j*2*np.pi*fc*t)
         sig *= bx[:sig.size] # downshifted
 
-    return sig, t
+    return sig
 
 #def lpf_design(fs:int, fc:float, L:int):
 def lpf_design(fs, fcutoff, L=50):
