@@ -25,7 +25,7 @@ def plotraw(sig, fs:int, Nraw:int=10000):
     ax.set_ylabel('amplitude')
 
 
-def plot_fmbaseband(sig, fs:int):
+def plot_fmbaseband(sig, fs:int, fmax:float):
     """
     inputs:
     -------
@@ -56,10 +56,10 @@ def plot_fmbaseband(sig, fs:int):
     ax = fg.gca()
 
     f,Sp = signal.welch(sig, fs,
-                #nperseg=Nfft,
+                nperseg=4096,
                 window = 'hann',
 #                    noverlap=Nol,
-                #nfft=Nfft,
+                nfft=4096,
                 return_onesided=True
                 )
 
@@ -67,4 +67,7 @@ def plot_fmbaseband(sig, fs:int):
     ax.set_ylabel('PSD [dB/Hz]')
     ax.set_xlabel('frequency [Hz]')
     ax.set_title('WBFM baseband multiplex: periodogram')
+    ax.set_xlim((0,fmax))
+    ax.set_ylim((-80,None))
     ax.grid(True)
+    fg.tight_layout()

@@ -7,26 +7,24 @@ Especially useful for spectrum saved from RTL-SDR with GNU Radio, GQRX, etc.
 """
 from pathlib import Path
 from matplotlib.pyplot import show
+import seaborn
+seaborn.set_context('talk')
 #
-from radioutils import loadbin,freq_translate, fm_demod, plot_fmbaseband, playaudio
+from radioutils import loadbin, fm_demod, playaudio
 
 fsaudio = 48e3  # [Hz], sampling rate of your soundcard for playback
 
 
-def main(fn:Path, fs:int, fc:float, tlim:tuple):
+def main(fn:Path, fs:int, fc:float, tlim:tuple, verbose:bool):
     fn = Path(fn).expanduser()
 
     assert isinstance(fs, (float, int))
     fs = int(fs)
 # %%
     sig = loadbin(fn, fs, tlim)
-# %% freq translate and decimate
-    sig = freq_translate(sig, fc, fs)
 # %%
-    m, baseband = fm_demod(sig, fs, fsaudio, fc, fmdev=75e3)
+    m = fm_demod(sig, fs, fsaudio, fc, 75e3, verbose)
     playaudio(m, fsaudio)
-
-    plot_fmbaseband(baseband, fs)
 
 
 if __name__ == '__main__':
@@ -38,9 +36,10 @@ if __name__ == '__main__':
     p.add_argument('-t', '--tlim',
                    help='start stop increment [seconds] to load',
                    type=float, nargs=2, default=(0., None))
+    p.add_argument('-v','--verbose',action='store_true')
 
     p = p.parse_args()
 
-    main(p.fn, p.fs, p.fc, p.tlim)
+    main(p.fn, p.fs, p.fc, p.tlim,p.verbose)
 
     show()

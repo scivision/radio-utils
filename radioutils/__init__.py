@@ -43,6 +43,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
     playback radar data using PyGame audio
     """
     if dat is None:
+        logging.info('no audio given, no playback')
         return
 
     fs = int(fs)
@@ -81,6 +82,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
             logging.warning(f'did NOT overwrite existing {ofn}')
 # %% play sound
     if 100e3 > fs > 1e3:
+        logging.info('attempting playback')
         Nloop = 0
         if pygame is None:
             logging.info('audio playback disabled due to missing Pygame')
@@ -195,11 +197,14 @@ def fm_demod(sig, fs:int, fsaudio:int, fc:float, fmdev=75e3, verbose:bool=False)
     Cfm = fs/(2*np.sqrt(2)*np.pi * fmdev)  # a scalar constant
     sig = Cfm * np.diff(np.unwrap(np.angle(sig)))
 
+    if verbose:
+        plot_fmbaseband(sig, fs, 100e3)
+
     # demodulated monoaural audio (plain audio waveform)
     # This has to occur AFTER demodulation, since WBFM is often wider than soundcard sample rate!
     m = downsample(sig, fs, fsaudio, verbose)
 
-    return m, sig
+    return m
 
 
 def ssb_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=5e3, verbose:bool=False):
