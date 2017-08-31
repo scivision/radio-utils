@@ -98,7 +98,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
     else:
         print(f'skipping playback due to fs={fs} Hz')
 
-def loadbin(fn:Path, fs:int, tlim=(0,None), fx0=None, decim=None):
+def loadbin(fn:Path, fs:int, tlim=(0,None)):
     """
     we assume PiRadar has single-precision complex floating point data
     Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
@@ -125,18 +125,12 @@ def loadbin(fn:Path, fs:int, tlim=(0,None), fx0=None, decim=None):
     assert sig.ndim == 1 and np.iscomplexobj(sig), 'file read incorrectly'
     assert sig.size > 0, 'read past end of file, did you specify incorrect time limits?'
 
-    """
-    It is useful to frequency translate and downsample the .bin file to drastically
-    conserve RAM and CPU in later steps.
-    """
-
-    sig, t = freq_translate(sig, fx0, fs, decim)
-
-    return sig, t
+    return sig
 
 def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=None, verbose:bool=False):
     """
-    Envelope demodulates AM with carrier (DSB or SSB)
+    Envelope demodulates AM with carrier (DSB or SSB).
+    Assumes desired AM signal is centered at zero baseband freq.
 
     inputs:
     -------,
@@ -165,9 +159,21 @@ def am_demod(sig, fs:int, fsaudio:int, fcutoff:float=10e3, frumble:float=None, v
     return sig
 
 def downsample(sig, fs:int, fsaudio:int, verbose:bool=False):
-# %% resample
+    if fs==fsaudio:
+        return sig
+
     decim = int(fs/fsaudio)
-    print('downsampling by factor of',decim)
+    if verbose:
+        print('downsampling by factor of',decim)
+
+    dtype = sig.dtype
+
+    sig = signal.decimate(sig, decim, zero_phase=True).astype(dtype)
+
+    return sig
+# %% resample
+
+
     dtype = sig.dtype
     sig = signal.decimate(sig, decim, zero_phase=True).astype(dtype)
 
@@ -183,10 +189,11 @@ def fm_demod(sig, fs:int, fsaudio:int, fmdev=75e3, verbose:bool=False):
         sig,t = loadbin(sig, fs)
 
     # FM is a time integral, angle modulation--so let's undo the FM
-    Cfm = fs/(2*np.pi * fmdev)  # a scalar constant
+    Cfm = fs/(2*np.sqrt(2)*np.pi * fmdev)  # a scalar constant
     sig = Cfm * np.diff(np.unwrap(np.angle(sig)))
 
     # demodulated monoaural audio (plain audio waveform)
+    # This has to occur AFTER demodulation, since WBFM is often wider than soundcard sample rate!
     m = downsample(sig, fs, fsaudio, verbose)
 
     return m, sig
@@ -205,7 +212,7 @@ def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:boo
 # %% assign elapsed time vector
     t = np.arange(0, sig.size / fs, 1/fs)
 # %% SSB demod
-    bx = np.exp(-1j*2*np.pi*fx*t)
+    bx = np.exp(1j*2*np.pi*fx*t)
     sig *= bx[:sig.size] # sometimes length was off by one
 
     sig = downsample(sig, fs, fsaudio, fcutoff, verbose)
@@ -213,28 +220,15 @@ def ssb_demod(sig, fs:int, fsaudio:int, fx:float, fcutoff:float=5e3, verbose:boo
     return sig
 
 
-def freq_translate(sig, fx:float, fs:int, decim: int):
+def freq_translate(sig, fc:float, fs:int):
 # %% assign elapsed time vector
-    t = np.arange(0, sig.size / fs, 1/fs)
+    t = np.arange(sig.size) / fs
 # %% frequency translate
-    if fx is not None:
-        bx = np.exp(1j*2*np.pi*fx*t)
+    if fc is not None:
+        bx = np.exp(1j*2*np.pi*fc*t)
         sig *= bx[:sig.size] # downshifted
-# %% decimate
-    sig, t = decim_sig(sig,fs,decim)
+
     return sig, t
-
-def decim_sig(sig,fs,decim):
-    Ntaps = 100 # arbitrary
-    # %% assign elapsed time vector
-    t = np.arange(0, sig.size / fs, 1/fs)
-
-    if decim is not None:
-        sig = signal.decimate(sig, decim, Ntaps, 'fir', zero_phase=True)
-        t = t[::decim]
-
-    return sig,t
-
 
 #def lpf_design(fs:int, fc:float, L:int):
 def lpf_design(fs, fcutoff, L=50):
