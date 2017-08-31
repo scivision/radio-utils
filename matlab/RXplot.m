@@ -22,10 +22,11 @@ fmdev = 75e3; % scales audio by initial modulation
 decim = fix(fs/fsaudio);
 
 lstart = []; lcount = [];
-if nargin>4
+if nargin>3
   if length(tss)>=1
     lstart = fix(tss(1)*fs);
-  elseif length(tss)>=2
+  end
+  if length(tss)>=2
     lcount = fix(tss(2)*fs);
   end
 end
