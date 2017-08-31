@@ -277,19 +277,23 @@ def bpf_design(fs, fcutoff, flow=300.,L=256):
 
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.remez.html
     """
+    firtype = 'firwin'
 
-    # 0.8*fc is arbitrary, for finite transition width
+    if firtype == 'remez':
+        # 0.8*fc is arbitrary, for finite transition width
 
-    #return signal.remez(L, [0, 200, 300,0.8*fcutoff, fcutoff, 0.5*fs],
-    #                    [0.,1., 0.], Hz=fs)
-
-    b= signal.firwin(L, [flow,fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
+        b = signal.remez(L, [0, 200, 300,0.8*fcutoff, fcutoff, 0.5*fs],
+                            [0.,1., 0.], Hz=fs)
+    elif firtype == 'firwin':
+        b = signal.firwin(L, [flow,fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
                          window='kaiser', scale=True)
 
-    #from oct2py import Oct2Py
-    #oc = Oct2Py()
-    #oc.eval('pkg load signal')
-    #b = oc.fir1(L, [0.03,0.35],'bandpass')
+    elif firtype =='matlab':
+        assert L % 2 != 0,'must have odd number of taps'
+        from oct2py import Oct2Py
+        oc = Oct2Py()
+        oc.eval('pkg load signal')
+        b = oc.fir1(L+1, [0.03,0.35],'bandpass')
 
     return b
 
