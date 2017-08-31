@@ -1,5 +1,5 @@
 from pathlib import Path
-import warnings
+import logging
 import numpy as np
 import scipy.signal as signal
 try:
@@ -7,7 +7,7 @@ try:
 except ImportError:
     pygame = None
 #
-from .plots import plotfir,plotraw
+from .plots import *
 
 class Link:
     def __init__(self,range_m, freq_hz, tx_dbm=None, rx_dbm=None):
@@ -78,12 +78,12 @@ def playaudio(dat, fs:int, ofn:Path=None):
             print('writing audio to',ofn)
             scipy.io.wavfile.write(ofn, fs, snd)
         else:
-            warnings.warn(f'did NOT overwrite existing {ofn}')
+            logging.warning(f'did NOT overwrite existing {ofn}')
 # %% play sound
     if 100e3 > fs > 1e3:
         Nloop = 0
         if pygame is None:
-            warnings.info('audio playback disabled due to missing Pygame')
+            logging.info('audio playback disabled due to missing Pygame')
             return
 
         assert snd.ndim in (1,2), 'mono or stereo Nx2'

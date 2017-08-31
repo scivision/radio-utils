@@ -7,6 +7,10 @@ function RXplot(fn,fs,modtype,tss)
 % modtype: am  fm
 % tss: start/stop times (seconds) to load (saves big time on enormous
 % files)
+
+try
+  pkg load signal
+end
   
 nbits=16;
 fsaudio = 48e3; % arbitrary for your soundcard
@@ -17,15 +21,13 @@ fmdev = 75e3; % scales audio by initial modulation
 % station. Feel free to add filtering.
 decim = fix(fs/fsaudio);
 
-if length(tss)>=1
+lstart = []; lcount = [];
+if nargin>4
+  if length(tss)>=1
     lstart = fix(tss(1)*fs);
-else
-    lstart = [];
-end
-if length(tss)>=2
+  elseif length(tss)>=2
     lcount = fix(tss(2)*fs);
-else
-    lcount = [];
+  end
 end
 sig = read_complex_binary(fn, lcount, lstart);
 
