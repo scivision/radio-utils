@@ -100,7 +100,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
     else:
         print(f'skipping playback due to fs={fs} Hz')
 
-def loadbin(fn:Path, fs:int, tlim=(0,None)):
+def loadbin(fn:Path, fs:int, tlim=None):
     """
     we assume PiRadar has single-precision complex floating point data
     Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
@@ -108,6 +108,12 @@ def loadbin(fn:Path, fs:int, tlim=(0,None)):
 
     We don't load the whole file by default, because it can greatly exceed PC RAM.
     """
+    if fn is None:
+        return
+
+    if tlim is None:
+        tlim = (0,None)
+
     Lbytes = 8  # 8 bytes per single-precision complex
     fn = Path(fn).expanduser()
 
