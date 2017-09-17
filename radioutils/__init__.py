@@ -111,6 +111,9 @@ def loadbin(fn:Path, fs:int, tlim=None):
     if fn is None:
         return
 
+    if fs is None:
+        raise RuntimeError(f'must specify sampling freq. for {fn}')
+
     if tlim is None:
         tlim = (0,None)
 
