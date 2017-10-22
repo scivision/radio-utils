@@ -1,6 +1,11 @@
-from matplotlib.pyplot import figure
 import numpy as np
 import scipy.signal as signal
+import
+try:
+    from matplotlib.pyplot import figure
+except RuntimeError as e:
+    logging.error(f'plotting unavailable: {e}'
+    figure=None
 
 def plotfir(b,fs):
 
