@@ -1,10 +1,10 @@
 import numpy as np
 import scipy.signal as signal
-import
+import logging
 try:
     from matplotlib.pyplot import figure
 except RuntimeError as e:
-    logging.error(f'plotting unavailable: {e}'
+    logging.error(f'plotting unavailable: {e}')
     figure=None
 
 def plotfir(b,fs):
