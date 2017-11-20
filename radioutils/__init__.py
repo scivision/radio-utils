@@ -6,8 +6,6 @@ try:
     import pygame
 except ImportError:
     pygame = None
-#
-from .plots import *
 
 class Link:
     def __init__(self,range_m, freq_hz, tx_dbm=None, rx_dbm=None):
@@ -174,6 +172,7 @@ def am_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=10e3, frumble:flo
 
     return sig
 
+
 def downsample(sig, fs:int, fsaudio:int, verbose:bool=False):
     if fs==fsaudio:
         return sig
@@ -207,9 +206,10 @@ def fm_demod(sig, fs:int, fsaudio:int, fc:float, fmdev=75e3, verbose:bool=False)
     sig = Cfm * np.diff(np.unwrap(np.angle(sig)))
 
     if verbose:
+        from .plots import plot_fmbaseband
         plot_fmbaseband(sig, fs, 100e3)
 
-    # demodulated monoaural audio (plain audio waveform)
+    # demodulated monoaural_ audio (plain audio waveform)
     # This has to occur AFTER demodulation, since WBFM is often wider than soundcard sample rate!
     m = downsample(sig, fs, fsaudio, verbose)
 
@@ -328,6 +328,7 @@ def final_filter(sig, fs:int, fcutoff:float, ftype:str, verbose:bool=False):
     sig = signal.lfilter(b, 1, sig)
 
     if verbose:
+        from .plots import plotfir
         print(ftype,' filter cutoff [Hz] ',fcutoff)
         plotfir(b, fs)
 
