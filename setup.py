@@ -1,17 +1,10 @@
 #!/usr/bin/env python
-req = ['numpy', 'matplotlib', 'scipy', 'nose', 'seaborn']
-
-import pip
-try:
-    import conda.cli
-    conda.cli.main('install', *req)
-except ImportError:
-    pip.main(['install'] + req)
+req = ['numpy', 'scipy', 'nose']
 # %%
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name='radioutils',
-      packages=['radioutils'],
+      packages=find_packages(),
       author='Michael Hirsch, Ph.D.',
       description=('Low-level radio communications modeling utilities'
                    'including AM, FM, SSB/DSB demodulation of GNU Radio data'),
@@ -25,4 +18,7 @@ setup(name='radioutils',
       ],
       install_requires=req,
       version='1.4.0',
+      extras_require={'plot':['matplotlib','seaborn'],
+                      'io':['pygame']},
+      python_requires='>=3.6',
       )

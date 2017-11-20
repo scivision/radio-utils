@@ -58,7 +58,8 @@ if __name__ == '__main__':
     p.add_argument('polarization',
                    help='polarization angle 0==horiz, 90==vert, 45==circ [degrees]',
                    type=float)
-    p.add_argument('elevation', help='elevation angle above horizon [degrees]',
+    p.add_argument('elevation', 
+                   help='elevation angle above horizon [degrees]',
                    type=float)
     p.add_argument('-v','--verbose', action='store_true')
     p = p.parse_args()

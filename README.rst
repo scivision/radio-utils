@@ -1,5 +1,6 @@
 .. image:: https://travis-ci.org/scivision/radio-utils.svg?branch=master
     :target: https://travis-ci.org/scivision/radio-utils
+    
 .. image:: https://coveralls.io/repos/scivision/radio-utils/badge.svg
     :target: https://coveralls.io/r/scivision/radio-utils
 
@@ -9,16 +10,15 @@ radio-sim
 Collection of scripts over the years simulating radio communications (commericial and amateur radio). 
 Python scripts by Michael Hirsch, Ph.D.
 
-fspl.py: Trivial implementation of free space path loss calcuation
-
-ssbmoddemod.py: simulated SSB transmitter and reciever, with optional frequency error
+* fspl.py: Trivial implementation of free space path loss calcuation
+* ssbmoddemod.py: simulated SSB transmitter and reciever, with optional frequency error
 
 
 Installation:
 -------------
 ::
 
-    python setup.py develop
+    pip install -e .
 
 Demo:
 -----
