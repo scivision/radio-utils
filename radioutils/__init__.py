@@ -98,34 +98,34 @@ def playaudio(dat, fs:int, ofn:Path=None):
     else:
         print(f'skipping playback due to fs={fs} Hz')
 
-def loadbin(fn:Path, fs:int, tlim=None):
+def loadbin(fn:Path, fs:int, tlim=None, isamp=None):
     """
-    we assume PiRadar has single-precision complex floating point data
+    we assume single-precision complex64 floating point data
     Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
     complex64 means single-precision complex floating-point data I + jQ.
-
-    We don't load the whole file by default, because it can greatly exceed PC RAM.
     """
+    LSAMP = 8  # 8 bytes per single-precision complex
+
     if fn is None:
         return
-
-    if fs is None:
-        raise RuntimeError(f'must specify sampling freq. for {fn}')
-
-    if tlim is None:
-        tlim = (0,None)
-
-    Lbytes = 8  # 8 bytes per single-precision complex
     fn = Path(fn).expanduser()
 
-    startbyte = int(Lbytes * tlim[0] * fs)
-    assert startbyte % 8 == 0,'must have multiple of 8 bytes or entire file is read incorrectly'
-
-    if tlim[1] is not None:
+    if fs is None:
+        raise ValueError(f'must specify sampling freq. for {fn}')
+# %%
+    if tlim is not None:
         assert len(tlim) == 2,'specify start and end times'
+        startbyte = int(LSAMP * tlim[0] * fs)
         count = int((tlim[1] - tlim[0]) * fs)
-    else: # read rest of file from startbyte
+    elif isamp is not None:
+        assert len(isamp)==2,'specify start and end sample indices'
+        startbyte = LSAMP * isamp[0]
+        count = isamp[1] - isamp[0]
+    else:
+        startbyte = 0
         count = -1 # count=None is not accepted
+# %%
+    assert startbyte % 8 == 0,'must have multiple of 8 bytes or entire file is read incorrectly'
 
     with fn.open('rb') as f:
         f.seek(startbyte)
