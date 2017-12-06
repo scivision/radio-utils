@@ -113,13 +113,18 @@ def loadbin(fn:Path, fs:int, tlim=None, isamp=None):
     if fs is None:
         raise ValueError(f'must specify sampling freq. for {fn}')
 # %%
-    if tlim is not None:
+    if isinstance(tlim,(tuple,np.ndarray,list)):
         assert len(tlim) == 2,'specify start and end times'
         startbyte = int(LSAMP * tlim[0] * fs)
         count = int((tlim[1] - tlim[0]) * fs)
     elif isamp is not None:
         assert len(isamp)==2,'specify start and end sample indices'
+
         startbyte = LSAMP * isamp[0]
+
+        if isinstance(tlim,(float,int)):  # to start at a particular time
+            startbyte += int(LSAMP * tlim * fs)
+
         count = isamp[1] - isamp[0]
     else:
         startbyte = 0
