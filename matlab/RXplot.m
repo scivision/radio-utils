@@ -63,4 +63,4 @@ pwelch(sig,[],[],[],fs,center)
 m = m/max(m);
 h = audioplayer(m, fsaudio, nbits);
 playblocking(h)  % just play() will stop after fraction of a second
-end
+end % function
