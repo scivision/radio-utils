@@ -2,10 +2,6 @@ from pathlib import Path
 import logging
 import numpy as np
 import scipy.signal as signal
-try:
-    import pygame
-except ImportError:
-    pygame = None
 
 class Link:
     def __init__(self,range_m, freq_hz, tx_dbm=None, rx_dbm=None):
@@ -41,7 +37,11 @@ def playaudio(dat, fs:int, ofn:Path=None):
     playback radar data using PyGame audio
     """
     if dat is None:
-        logging.info('no audio given, no playback')
+        return
+
+    try:
+        import pygame
+    except ImportError:
         return
 
     fs = int(fs)
@@ -98,6 +98,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
     else:
         print(f'skipping playback due to fs={fs} Hz')
 
+
 def loadbin(fn:Path, fs:int, tlim=None, isamp=None):
     """
     we assume single-precision complex64 floating point data
@@ -140,6 +141,7 @@ def loadbin(fn:Path, fs:int, tlim=None, isamp=None):
     assert sig.size > 0, 'read past end of file, did you specify incorrect time limits?'
 
     return sig
+
 
 def am_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=10e3, frumble:float=None, verbose:bool=False):
     """
@@ -269,6 +271,7 @@ def lpf_design(fs, fcutoff, L=50):
     #return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
     return signal.firwin(L, fcutoff, nyq=0.5*fs, pass_zero=True)
 
+
 def hpf_design(fs, fcutoff, L=199):
     """
     Design FIR high-pass filter coefficients "b"
@@ -300,7 +303,9 @@ def bpf_design(fs, fcutoff, flow=300.,L=256):
     if firtype == 'remez':
         # 0.8*fc is arbitrary, for finite transition width
 
-        b = signal.remez(L, [0, 200, 300,0.8*fcutoff, fcutoff, 0.5*fs],
+        b = signal.remez(L, [0, 0.8*flow,
+                             flow, 0.8*fcutoff,
+                             fcutoff, 0.5*fs],
                             [0.,1., 0.], Hz=fs)
     elif firtype == 'firwin':
         b = signal.firwin(L, [flow,fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
@@ -309,11 +314,12 @@ def bpf_design(fs, fcutoff, flow=300.,L=256):
     elif firtype =='matlab':
         assert L % 2 != 0,'must have odd number of taps'
         from oct2py import Oct2Py
-        oc = Oct2Py()
-        oc.eval('pkg load signal')
-        b = oc.fir1(L+1, [0.03,0.35],'bandpass')
+        with Oct2Py() as oc:
+            oc.eval('pkg load signal')
+            b = oc.fir1(L+1, [0.03,0.35],'bandpass')
 
     return b
+
 
 def final_filter(sig, fs:int, fcutoff:float, ftype:str, verbose:bool=False):
     if fcutoff is None:
@@ -338,4 +344,3 @@ def final_filter(sig, fs:int, fcutoff:float, ftype:str, verbose:bool=False):
         plotfir(b, fs)
 
     return sig
-
