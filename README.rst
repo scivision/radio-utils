@@ -11,15 +11,14 @@ radio-sim
 Collection of scripts over the years simulating radio communications (commericial and amateur radio). 
 Python scripts by Michael Hirsch, Ph.D.
 
-* fspl.py: Trivial implementation of free space path loss calcuation
-* ssbmoddemod.py: simulated SSB transmitter and reciever, with optional frequency error
-
+.. contents::
 
 Install
 =======
 ::
 
     python -m pip install -e .
+    
 
 Usage
 =====
