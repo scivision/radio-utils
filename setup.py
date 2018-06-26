@@ -10,7 +10,8 @@ setup(name='radioutils',
       author='Michael Hirsch, Ph.D.',
       description=('Low-level radio communications modeling utilities'
                    'including AM, FM, SSB/DSB demodulation of GNU Radio data'),
-      long_description=open('README.rst').read(),
+      long_description=open('README.md').read(),
+      long_description_content_type="text/markdown",
       url='https://github.com/scivision/radioutils',
       classifiers=[
           'Intended Audience :: Science/Research',
