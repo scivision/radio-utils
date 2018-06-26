@@ -2,7 +2,7 @@
 from setuptools import setup, find_packages
 
 install_requires = ['numpy', 'scipy']
-tests_require = ['pytest', 'coveralls', 'flake8', 'mypy']
+tests_require = ['pytest', 'pytest-cov', 'coveralls', 'flake8', 'mypy']
 
 
 setup(name='radioutils',
