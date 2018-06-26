@@ -2,27 +2,36 @@ from pathlib import Path
 import logging
 import numpy as np
 import scipy.signal as signal
+from typing import Union
+
 
 class Link:
-    def __init__(self,range_m, freq_hz, tx_dbm=None, rx_dbm=None):
+    def __init__(self, range_m, freq_hz, tx_dbm=None, rx_dbm=None):
         self.range = np.atleast_1d(range_m)
         self.freq = freq_hz
         self.txpwr = tx_dbm
         self.rxsens = rx_dbm
-        self.c = 299792458. #m/s
+        self.c = 299792458.  # m/s
+
     def power_dbm(self):
         return self.txpwr
+
     def power_watts(self):
         return 10.**((self.txpwr - 30) / 10.)
+
     def freq_mhz(self):
         return self.freq / 1e6
+
     def freq_ghz(self):
         return self.freq / 1e9
+
     def fspl(self):
         return 20 * np.log10(4*np.pi / self.c * self.range * self.freq)
+
     def linkbudget(self):
         if self.rxsens is not None:
             return self.txpwr - self.fspl() - self.rxsens
+
     def linkreport(self):
         print(f'link margin {self.linkbudget()} dB ')
         print('based on isotropic 0 dBi gain antennas and:')
@@ -32,7 +41,7 @@ class Link:
         print(f'for Range [m]= {self.range}  Frequency [MHz]={self.freq_mhz():0.1f}')
 
 
-def playaudio(dat, fs:int, ofn:Path=None):
+def playaudio(dat, fs: int, ofn: Path=None):
     """
     playback radar data using PyGame audio
     """
@@ -46,13 +55,13 @@ def playaudio(dat, fs:int, ofn:Path=None):
 
     fs = int(fs)
 # %% rearrange sound array to [N,2] for Numpy playback/writing
-    if isinstance(dat.dtype,np.int16):
+    if isinstance(dat.dtype, np.int16):
         odtype = dat.dtype
         fnorm = 32768
-    elif isinstance(dat.dtype,np.int8):
+    elif isinstance(dat.dtype, np.int8):
         odtype = dat.dtype
         fnorm = 128
-    elif dat.dtype in ('complex128','float64'):
+    elif dat.dtype in ('complex128', 'float64'):
         odtype = np.float64
         fnorm = 1.0
     elif dat.dtype in ('complex64', 'float32'):
@@ -62,9 +71,9 @@ def playaudio(dat, fs:int, ofn:Path=None):
         raise TypeError(f'unknown input type {dat.dtype}')
 
     if np.iscomplexobj(dat):
-        snd = np.empty((dat.size,2),dtype=odtype)
-        snd[:,0] = dat.real
-        snd[:,1] = dat.imag
+        snd = np.empty((dat.size, 2), dtype=odtype)
+        snd[:, 0] = dat.real
+        snd[:, 1] = dat.imag
     else:
         snd = dat  # monaural
 
@@ -74,7 +83,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
         ofn = Path(ofn).expanduser()
         if not ofn.is_file():
             import scipy.io.wavfile
-            print('writing audio to',ofn)
+            print('writing audio to', ofn)
             scipy.io.wavfile.write(ofn, fs, snd)
         else:
             logging.warning(f'did NOT overwrite existing {ofn}')
@@ -86,7 +95,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
             logging.info('audio playback disabled due to missing Pygame')
             return
 
-        assert snd.ndim in (1,2), 'mono or stereo Nx2'
+        assert snd.ndim in (1, 2), 'mono or stereo Nx2'
 
         # scale to pygame required int16 format
         fnorm = 32768 / snd.max()
@@ -99,7 +108,7 @@ def playaudio(dat, fs:int, ofn:Path=None):
         print(f'skipping playback due to fs={fs} Hz')
 
 
-def loadbin(fn:Path, fs:int, tlim=None, isamp=None):
+def loadbin(fn: Path, fs: int, tlim=None, isamp=None):
     """
     we assume single-precision complex64 floating point data
     Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
@@ -114,24 +123,24 @@ def loadbin(fn:Path, fs:int, tlim=None, isamp=None):
     if fs is None:
         raise ValueError(f'must specify sampling freq. for {fn}')
 # %%
-    if isinstance(tlim,(tuple,np.ndarray,list)):
-        assert len(tlim) == 2,'specify start and end times'
+    if isinstance(tlim, (tuple, np.ndarray, list)):
+        assert len(tlim) == 2, 'specify start and end times'
         startbyte = int(LSAMP * tlim[0] * fs)
         count = int((tlim[1] - tlim[0]) * fs)
     elif isamp is not None:
-        assert len(isamp)==2,'specify start and end sample indices'
+        assert len(isamp) == 2, 'specify start and end sample indices'
 
         startbyte = LSAMP * isamp[0]
 
-        if isinstance(tlim,(float,int)):  # to start at a particular time
+        if isinstance(tlim, (float, int)):  # to start at a particular time
             startbyte += int(LSAMP * tlim * fs)
 
         count = isamp[1] - isamp[0]
     else:
         startbyte = 0
-        count = -1 # count=None is not accepted
+        count = -1  # count=None is not accepted
 # %%
-    assert startbyte % 8 == 0,'must have multiple of 8 bytes or entire file is read incorrectly'
+    assert startbyte % 8 == 0, 'must have multiple of 8 bytes or entire file is read incorrectly'
 
     with fn.open('rb') as f:
         f.seek(startbyte)
@@ -143,7 +152,9 @@ def loadbin(fn:Path, fs:int, tlim=None, isamp=None):
     return sig
 
 
-def am_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=10e3, frumble:float=None, verbose:bool=False):
+def am_demod(sig, fs: int, fsaudio: int, fc: float,
+             fcutoff: float=10e3, frumble: float=None,
+             verbose: bool=False) -> np.ndarray:
     """
     Envelope demodulates AM with carrier (DSB or SSB).
     Assumes desired AM signal is centered at zero baseband freq.
@@ -164,8 +175,8 @@ def am_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=10e3, frumble:flo
     """
     if isinstance(sig, Path):
         sig = loadbin(sig, fs)
- #   if verbose:
-#        plotraw(sig, fs)
+    # if verbose:
+    #     plotraw(sig, fs)
 
     sig = freq_translate(sig, fc, fs)
 
@@ -174,19 +185,19 @@ def am_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=10e3, frumble:flo
     sig = final_filter(sig, fsaudio, fcutoff, ftype='lpf', verbose=verbose)
 # %% ideal diode: half-wave rectifier
     sig = sig**2
-#%% optional rumble filter
+# %% optional rumble filter
     sig = final_filter(sig, fsaudio, frumble, ftype='hpf', verbose=verbose)
 
     return sig
 
 
-def downsample(sig, fs:int, fsaudio:int, verbose:bool=False):
-    if fs==fsaudio:
+def downsample(sig, fs: int, fsaudio: int, verbose: bool=False) -> np.ndarray:
+    if fs == fsaudio:
         return sig
 
     decim = int(fs/fsaudio)
     if verbose:
-        print('downsampling by factor of',decim)
+        print('downsampling by factor of', decim)
 
     dtype = sig.dtype
 
@@ -195,7 +206,8 @@ def downsample(sig, fs:int, fsaudio:int, verbose:bool=False):
     return sig
 
 
-def fm_demod(sig, fs:int, fsaudio:int, fc:float, fmdev=75e3, verbose:bool=False):
+def fm_demod(sig, fs: int, fsaudio: int, fc: float, fmdev=75e3,
+             verbose: bool=False) -> np.ndarray:
     """
     currently this function discards all but the monaural audio.
 
@@ -223,7 +235,7 @@ def fm_demod(sig, fs:int, fsaudio:int, fc:float, fmdev=75e3, verbose:bool=False)
     return m
 
 
-def ssb_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=5e3, verbose:bool=False):
+def ssb_demod(sig, fs: int, fsaudio: int, fc: float, fcutoff: float=5e3, verbose: bool=False):
     """
     filter method SSB/DSB suppressed carrier demodulation
 
@@ -239,24 +251,26 @@ def ssb_demod(sig, fs:int, fsaudio:int, fc:float, fcutoff:float=5e3, verbose:boo
     t = np.arange(0, sig.size / fs, 1/fs)
 # %% SSB demod
     bx = np.exp(1j*2*np.pi*fc*t)
-    sig *= bx[:sig.size] # sometimes length was off by one
+    sig *= bx[:sig.size]  # sometimes length was off by one
 
-    sig = downsample(sig, fs, fsaudio, fcutoff, verbose)
+    sig = downsample(sig, fs, fsaudio, verbose)
 
     return sig
 
 
-def freq_translate(sig, fc:float, fs:int):
-# %% assign elapsed time vector
+def freq_translate(sig, fc: float, fs: int):
+    # %% assign elapsed time vector
     t = np.arange(sig.size) / fs
 # %% frequency translate
     if fc is not None:
         bx = np.exp(1j*2*np.pi*fc*t)
-        sig *= bx[:sig.size] # downshifted
+        sig *= bx[:sig.size]  # downshifted
 
     return sig
 
-#def lpf_design(fs:int, fc:float, L:int):
+# def lpf_design(fs:int, fc:float, L:int):
+
+
 def lpf_design(fs, fcutoff, L=50):
     """
     Design FIR low-pass filter coefficients "b"
@@ -268,7 +282,7 @@ def lpf_design(fs, fcutoff, L=50):
     """
     # 0.8*fc is arbitrary, for finite transition width
 
-    #return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
+    # return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
     return signal.firwin(L, fcutoff, nyq=0.5*fs, pass_zero=True)
 
 
@@ -283,12 +297,12 @@ def hpf_design(fs, fcutoff, L=199):
     """
     # 0.8*fc is arbitrary, for finite transition width
 
-    #return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
+    # return signal.remez(L, [0, 0.8*fcutoff, fcutoff, 0.5*fs], [1., 0.], Hz=fs)
     return signal.firwin(L, fcutoff, nyq=0.5*fs, pass_zero=False,
-                         width=10, window='kaiser',scale=True)
+                         width=10, window='kaiser', scale=True)
 
 
-def bpf_design(fs, fcutoff, flow=300.,L=256):
+def bpf_design(fs, fcutoff, flow=300., L=256):
     """
     Design FIR bandpass filter coefficients "b"
     fcutoff: cutoff frequency [Hz]
@@ -306,32 +320,33 @@ def bpf_design(fs, fcutoff, flow=300.,L=256):
         b = signal.remez(L, [0, 0.8*flow,
                              flow, 0.8*fcutoff,
                              fcutoff, 0.5*fs],
-                            [0.,1., 0.], Hz=fs)
+                         [0., 1., 0.], Hz=fs)
     elif firtype == 'firwin':
-        b = signal.firwin(L, [flow,fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
-                         window='kaiser', scale=True)
+        b = signal.firwin(L, [flow, fcutoff], pass_zero=False, width=100, nyq=0.5*fs,
+                          window='kaiser', scale=True)
 
-    elif firtype =='matlab':
-        assert L % 2 != 0,'must have odd number of taps'
+    elif firtype == 'matlab':
+        assert L % 2 != 0, 'must have odd number of taps'
         from oct2py import Oct2Py
         with Oct2Py() as oc:
             oc.eval('pkg load signal')
-            b = oc.fir1(L+1, [0.03,0.35],'bandpass')
+            b = oc.fir1(L+1, [0.03, 0.35], 'bandpass')
 
     return b
 
 
-def final_filter(sig, fs:int, fcutoff:float, ftype:str, verbose:bool=False):
+def final_filter(sig, fs: int, fcutoff: Union[None, float],
+                 ftype: str, verbose: bool=False) -> np.ndarray:
     if fcutoff is None:
         return sig
 
-    assert fcutoff < 0.5*fs,'aliasing due to filter cutoff > 0.5*fs'
+    assert fcutoff < 0.5*fs, 'aliasing due to filter cutoff > 0.5*fs'
 
-    if ftype=='lpf':
+    if ftype == 'lpf':
         b = lpf_design(fs, fcutoff)
-    elif ftype=='bpf':
+    elif ftype == 'bpf':
         b = bpf_design(fs, fcutoff)
-    elif ftype=='hpf':
+    elif ftype == 'hpf':
         b = hpf_design(fs, fcutoff)
     else:
         raise ValueError(f'Unknown filter type {ftype}')
@@ -340,7 +355,7 @@ def final_filter(sig, fs:int, fcutoff:float, ftype:str, verbose:bool=False):
 
     if verbose:
         from .plots import plotfir
-        print(ftype,' filter cutoff [Hz] ',fcutoff)
+        print(ftype, ' filter cutoff [Hz] ', fcutoff)
         plotfir(b, fs)
 
     return sig

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-install_requires = ['numpy', 'scipy']
-tests_require=['nose','coveralls']
-# %%
 from setuptools import setup, find_packages
+
+install_requires = ['numpy', 'scipy']
+tests_require = ['pytest', 'coveralls', 'flake8', 'mypy']
+
 
 setup(name='radioutils',
       packages=find_packages(),
@@ -21,9 +22,9 @@ setup(name='radioutils',
       ],
       install_requires=install_requires,
       tests_require=tests_require,
-      version='1.5.1',
-      extras_require={'plot':['matplotlib','seaborn'],
-                      'io':['pygame'],
-                      'tests':tests_require},
+      version='1.5.2',
+      extras_require={'plot': ['matplotlib', 'seaborn'],
+                      'io': ['pygame'],
+                      'tests': tests_require},
       python_requires='>=3.6',
       )
