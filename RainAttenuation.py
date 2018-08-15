@@ -13,8 +13,45 @@ Example plot: 1-1000 GHz, 40 degree elevation angle, 10 mm/hour, vertical polari
 """
 import numpy as np
 from matplotlib.pyplot import figure, show
-#
+from argparse import ArgumentParser
 from radioutils.impairments import _rain_coeff, rain_attenuation
+
+
+def main():
+    p = ArgumentParser()
+    p.add_argument('rainrate', help='rain rate [mm/hour]', type=float)
+    p.add_argument(
+        'freqHz', help='frequency in Hz. Specifying -1 gives full-range frequency sweep plot', type=float)
+    p.add_argument('polarizationDegrees',
+                   help='polarization angle 0==horiz, 90==vert, 45==circ [degrees]',
+                   type=float)
+    p.add_argument('elevationDegrees',
+                   help='elevation angle above horizon [degrees]',
+                   type=float)
+    p.add_argument('-v', '--verbose',
+                   help='reproduce report plots', action='store_true')
+    P = p.parse_args()
+
+    if P.freqHz <= 0 or P.verbose:
+        f = np.logspace(9, 12, 200)
+        dBkm = get_rain_atten(f, P.rainrate, P.polarizationDegrees, P.elevationDegrees,
+                              P.verbose)
+
+        ax = figure().gca()
+        ax.loglog(f/1e9, dBkm)
+        ax.set_title(
+            f'ITU-R P.838-3 Rain attenuation\n {P.rainrate} mm/hour, elevation {P.elevationDegrees} degrees')
+        ax.set_xlabel('frequency [GHz]')
+        ax.set_ylabel('rain attenuation [dB/km]')
+        ax.grid(True, which='both')
+
+        show()
+    else:
+        f = P.freqHz
+        dBkm = get_rain_atten(
+            f, P.rainrate, P.polarizationDegrees, P.elevationDegrees)
+
+        print(f'{dBkm:0.2e} dB/km attenuation')
 
 
 def get_rain_atten(f, rainrate, polarization, elevation, verbose=False):
@@ -69,38 +106,4 @@ def get_rain_atten(f, rainrate, polarization, elevation, verbose=False):
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    p = ArgumentParser()
-    p.add_argument('rainrate', help='rain rate [mm/hour]', type=float)
-    p.add_argument(
-        'freqHz', help='frequency in Hz. Specifying -1 gives full-range frequency sweep plot', type=float)
-    p.add_argument('polarizationDegrees',
-                   help='polarization angle 0==horiz, 90==vert, 45==circ [degrees]',
-                   type=float)
-    p.add_argument('elevationDegrees',
-                   help='elevation angle above horizon [degrees]',
-                   type=float)
-    p.add_argument('-v', '--verbose',
-                   help='reproduce report plots', action='store_true')
-    P = p.parse_args()
-
-    if P.freqHz <= 0 or P.verbose:
-        f = np.logspace(9, 12, 200)
-        dBkm = get_rain_atten(f, P.rainrate, P.polarizationDegrees, P.elevationDegrees,
-                              P.verbose)
-
-        ax = figure().gca()
-        ax.loglog(f/1e9, dBkm)
-        ax.set_title(
-            f'ITU-R P.838-3 Rain attenuation\n {P.rainrate} mm/hour, elevation {P.elevationDegrees} degrees')
-        ax.set_xlabel('frequency [GHz]')
-        ax.set_ylabel('rain attenuation [dB/km]')
-        ax.grid(True, which='both')
-
-        show()
-    else:
-        f = P.freqHz
-        dBkm = get_rain_atten(
-            f, P.rainrate, P.polarizationDegrees, P.elevationDegrees)
-
-        print(f'{dBkm:0.2e} dB/km attenuation')
+    main()

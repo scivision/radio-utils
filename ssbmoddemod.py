@@ -5,18 +5,32 @@ Refer to Lathi's communications text or another reputable source
 
 https://scivision.co/python-pygame-installation/
 '''
-from __future__ import division
 from pathlib import Path
 from numpy import linspace, cos,  pi, arange, int16, log10
 from numpy.fft import fft, fftshift
 from scipy.signal import butter, lfilter, resample
 from matplotlib.pyplot import figure, show
-from warnings import warn
+import logging
+from argparse import ArgumentParser
 # from scikits.audiolab import play #only works with python 2.7 for me, bad sound
 import pygame
 from scipy.io.wavfile import read
 
 fsaudio = 44100
+
+
+def main():
+    p = ArgumentParser(description='simulate SSB communication')
+    p.add_argument('wavfn', help='.wav file to transmit/receive')
+    p.add_argument(
+        '-e', '--rxerr', help='deliberate error in receive carrier frequency [Hz]', type=float, default=0)
+    p.add_argument(
+        '--noplot', help='disable media (typ. for selftest)', action='store_false')
+    a = p.parse_args()
+
+    ssbsim(a.wavfn, a.rxerr, a.noplot)
+
+    show()
 
 
 def ssbsim(wavfn, rxerr, doplot):
@@ -78,7 +92,7 @@ def ssbsim(wavfn, rxerr, doplot):
             print(f'sound length {sound.get_length()} seconds')
             sound.play(loops=0)
         except Exception as e:
-            warn(f'skipping audio playback due to error  {e}')
+            logging.warning(f'skipping audio playback due to error  {e}')
         # %% plot
         ax = figure(3).gca()
         ax.plot(t, m)
@@ -112,15 +126,4 @@ def ssbsim(wavfn, rxerr, doplot):
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    p = ArgumentParser(description='simulate SSB communication')
-    p.add_argument('wavfn', help='.wav file to transmit/receive')
-    p.add_argument(
-        '-e', '--rxerr', help='deliberate error in receive carrier frequency [Hz]', type=float, default=0)
-    p.add_argument(
-        '--noplot', help='disable media (typ. for selftest)', action='store_false')
-    a = p.parse_args()
-
-    ssbsim(a.wavfn, a.rxerr, a.noplot)
-
-    show()
+    main()

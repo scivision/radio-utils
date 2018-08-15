@@ -5,14 +5,33 @@ and devices passing at different closest approach distances
 
 This is not what real-life signals would show (except in outer space) due to multipath constructive/destrubtive interference
 """
-
-from __future__ import division
 import numpy as np
 from matplotlib.pyplot import show, subplots
 from radioutils import Link
+from argparse import ArgumentParser
 import seaborn as sns
 sns.set_context('poster')
-#
+
+
+def main():
+    p = ArgumentParser(description='Shows free space RSSI vs. simultaneous parallel tracks')
+    p.add_argument('xm', help='start stop step values of x-displacement [m]', nargs=3, type=float)
+    p.add_argument('-y', '--ym', help='y-offset [m] (closest approach to TX', nargs='+', type=float, default=[1])
+    p.add_argument('-n', '--noisevar',
+                   help='variance of noise (dB) to add', type=float, default=0)
+    P = p.parse_args()
+
+    x = np.arange(P.xm[0], P.xm[1], P.xm[2])
+    y = np.atleast_1d(P.ym)
+
+    dist = np.hypot(x[:, None], y[None, :])
+
+    Pr_dbm = comprx(Pt_W=1e-4, d=dist)
+    Pr_dbm = add_noise(Pr_dbm, P.noisevar)
+
+    plotsig(x, y, dist, Pr_dbm)
+
+    show()
 
 
 def comprx(Pt_W, d):
@@ -50,25 +69,4 @@ def plotsig(x, y, d, Pr_dbm):
 
 
 if __name__ == '__main__':
-    from argparse import ArgumentParser
-    p = ArgumentParser(
-        description='Shows free space RSSI vs. simultaneous parallel tracks')
-    p.add_argument(
-        'xm', help='start stop step values of x-displacement [m]', nargs=3, type=float)
-    p.add_argument(
-        '-y', '--ym', help='y-offset [m] (closest approach to TX', nargs='+', type=float, default=[1])
-    p.add_argument('-n', '--noisevar',
-                   help='variance of noise (dB) to add', type=float, default=0)
-    P = p.parse_args()
-
-    x = np.arange(P.xm[0], P.xm[1], P.xm[2])
-    y = np.atleast_1d(P.ym)
-
-    dist = np.hypot(x[:, None], y[None, :])
-
-    Pr_dbm = comprx(Pt_W=1e-4, d=dist)
-    Pr_dbm = add_noise(Pr_dbm, P.noisevar)
-
-    plotsig(x, y, dist, Pr_dbm)
-
-    show()
+    main()

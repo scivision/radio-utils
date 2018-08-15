@@ -41,7 +41,7 @@ class Link:
         print(f'for Range [m]= {self.range}  Frequency [MHz]={self.freq_mhz():0.1f}')
 
 
-def playaudio(dat, fs: int, ofn: Path=None):
+def playaudio(dat: np.ndarray, fs: int, ofn: Path=None):
     """
     playback radar data using PyGame audio
     """
@@ -108,7 +108,7 @@ def playaudio(dat, fs: int, ofn: Path=None):
         print(f'skipping playback due to fs={fs} Hz')
 
 
-def loadbin(fn: Path, fs: int, tlim=None, isamp=None):
+def loadbin(fn: Path, fs: int, tlim=None, isamp=None) -> np.ndarray:
     """
     we assume single-precision complex64 floating point data
     Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
@@ -191,7 +191,7 @@ def am_demod(sig, fs: int, fsaudio: int, fc: float,
     return sig
 
 
-def downsample(sig, fs: int, fsaudio: int, verbose: bool=False) -> np.ndarray:
+def downsample(sig: np.ndarray, fs: int, fsaudio: int, verbose: bool=False) -> np.ndarray:
     if fs == fsaudio:
         return sig
 
@@ -235,7 +235,7 @@ def fm_demod(sig, fs: int, fsaudio: int, fc: float, fmdev=75e3,
     return m
 
 
-def ssb_demod(sig, fs: int, fsaudio: int, fc: float, fcutoff: float=5e3, verbose: bool=False):
+def ssb_demod(sig: np.ndarray, fs: int, fsaudio: int, fc: float, fcutoff: float=5e3, verbose: bool=False) -> np.ndarray:
     """
     filter method SSB/DSB suppressed carrier demodulation
 
@@ -258,7 +258,7 @@ def ssb_demod(sig, fs: int, fsaudio: int, fc: float, fcutoff: float=5e3, verbose
     return sig
 
 
-def freq_translate(sig, fc: float, fs: int):
+def freq_translate(sig: np.ndarray, fc: float, fs: int) -> np.ndarray:
     # %% assign elapsed time vector
     t = np.arange(sig.size) / fs
 # %% frequency translate
@@ -271,7 +271,7 @@ def freq_translate(sig, fc: float, fs: int):
 # def lpf_design(fs:int, fc:float, L:int):
 
 
-def lpf_design(fs, fcutoff, L=50):
+def lpf_design(fs: int, fcutoff, L=50):
     """
     Design FIR low-pass filter coefficients "b"
     fcutoff: cutoff frequency [Hz]
@@ -286,7 +286,7 @@ def lpf_design(fs, fcutoff, L=50):
     return signal.firwin(L, fcutoff, nyq=0.5*fs, pass_zero=True)
 
 
-def hpf_design(fs, fcutoff, L=199):
+def hpf_design(fs: int, fcutoff: float, L: int=199):
     """
     Design FIR high-pass filter coefficients "b"
     fcutoff: cutoff frequency [Hz]
@@ -302,7 +302,7 @@ def hpf_design(fs, fcutoff, L=199):
                          width=10, window='kaiser', scale=True)
 
 
-def bpf_design(fs, fcutoff, flow=300., L=256):
+def bpf_design(fs: int, fcutoff: float, flow: float=300., L: int=256):
     """
     Design FIR bandpass filter coefficients "b"
     fcutoff: cutoff frequency [Hz]
@@ -335,7 +335,7 @@ def bpf_design(fs, fcutoff, flow=300., L=256):
     return b
 
 
-def final_filter(sig, fs: int, fcutoff: Union[None, float],
+def final_filter(sig: np.ndarray, fs: int, fcutoff: Union[None, float],
                  ftype: str, verbose: bool=False) -> np.ndarray:
     if fcutoff is None:
         return sig
