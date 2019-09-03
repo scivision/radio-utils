@@ -10,8 +10,8 @@ def rain_attenuation(freqHz: float, rainrate: float, polarization, elevation: fl
     """
 
     a, k = _rain_coeff(freqHz, polarization, elevation)
-# %% equation 1
-    rain_atten_dBkm = k*rainrate**a
+    # %% equation 1
+    rain_atten_dBkm = k * rainrate ** a
 
     return rain_atten_dBkm
 
@@ -27,19 +27,21 @@ def _rain_coeff(freqHz: float, polarization: Union[str, float], elevation: float
     elevation angle: Degrees above horizon of path
     """
     freqHz = np.asarray(freqHz)
-    assert ((1e9 <= freqHz) & (freqHz < 1e16)).all(), 'Model validity bounds: 1-1000 GHz'  # type: ignore
+    assert (
+        (1e9 <= freqHz) & (freqHz < 1e16)
+    ).all(), "Model validity bounds: 1-1000 GHz"  # type: ignore
 
-    if polarization == 'v':
-        polarization = 90.
-    elif polarization == 'h':
-        polarization = 0.
-    elif isinstance(polarization, (int, float)) and 0. <= polarization <= 90.:
+    if polarization == "v":
+        polarization = 90.0
+    elif polarization == "h":
+        polarization = 0.0
+    elif isinstance(polarization, (int, float)) and 0.0 <= polarization <= 90.0:
         elevation = np.radians(elevation)
         polarization = np.radians(elevation)
     else:
-        raise ValueError(f'Unknown polarization {polarization}')
+        raise ValueError(f"Unknown polarization {polarization}")
 
-    if np.isclose(polarization, 0.):
+    if np.isclose(polarization, 0.0):
         # Table 1
         ak = (-5.33980, -0.35351, -0.23789, -0.94158)
         bk = (-0.10008, 1.26970, 0.86036, 0.64552)
@@ -53,7 +55,7 @@ def _rain_coeff(freqHz: float, polarization: Union[str, float], elevation: float
         ca = (-0.55187, 0.19822, 0.13164, 1.47828, 3.43990)
         ma = 0.67849
         Ca = -1.95537
-    elif np.isclose(polarization, 90.):
+    elif np.isclose(polarization, 90.0):
         # Table 2
         ak = (-3.80595, -3.44965, -0.39902, 0.50167)
         bk = (0.56934, -0.22911, 0.73042, 1.07319)
@@ -69,27 +71,31 @@ def _rain_coeff(freqHz: float, polarization: Union[str, float], elevation: float
         Ca = 0.83433
     else:
         # %% elliptical polarization
-        av, kv = _rain_coeff(freqHz, 'v', elevation)
-        ah, kh = _rain_coeff(freqHz, 'h', elevation)
+        av, kv = _rain_coeff(freqHz, "v", elevation)
+        ah, kh = _rain_coeff(freqHz, "h", elevation)
 
         assert isinstance(polarization, (float, int))
         # Equation 4
-        k = (kh + kv + (kh-kv)*np.cos(elevation)**2 * np.cos(2.*polarization)) / 2.
+        k = (kh + kv + (kh - kv) * np.cos(elevation) ** 2 * np.cos(2.0 * polarization)) / 2.0
         # Equation 5
-        a = (kh*ah + kv*av + (kh*ah-kv*av)*np.cos(elevation)**2 * np.cos(2*polarization)) / (2.*k)
+        a = (
+            kh * ah
+            + kv * av
+            + (kh * ah - kv * av) * np.cos(elevation) ** 2 * np.cos(2 * polarization)
+        ) / (2.0 * k)
 
         return a, k
-# %%
-    logF = np.log10(freqHz/1e9)
-# %% compute k (Equation 2)
+    # %%
+    logF = np.log10(freqHz / 1e9)
+    # %% compute k (Equation 2)
     logk = mk * logF + Ck
     for j in range(4):
-        logk += ak[j] * np.exp(-((logF - bk[j]) / ck[j])**2)
+        logk += ak[j] * np.exp(-((logF - bk[j]) / ck[j]) ** 2)
 
-    k = 10.**logk
-# %% compute alpha==a (Equation 3)
+    k = 10.0 ** logk
+    # %% compute alpha==a (Equation 3)
     a = ma * logF + Ca
     for j in range(5):
-        a += aa[j] * np.exp(-((logF - ba[j]) / ca[j])**2)
+        a += aa[j] * np.exp(-((logF - ba[j]) / ca[j]) ** 2)
 
     return a, k

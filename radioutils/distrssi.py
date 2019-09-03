@@ -12,17 +12,14 @@ dist2rssi: Assuming only free space (no reflections) propagation, what would RSS
 rssi2dist: given a reference transmitter power at 1 meter and the measured RSSI, and assuming
   free space propagation (no reflections), what must the distance between TX-RX be?
 
-Michael Hirsch
-https://scivision.co
 """
 
-from __future__ import division
 from warnings import warn
 
 from . import Link
 
 
-def dist2rssi(d, notionaltx=-14, freqHz=2450e6):
+def dist2rssi(d, notionaltx: float = -14, freqHz: float = 2450e6):
     """ compute Friis free space loss
     notionaltx: conducted transmit power [dBm] into 50 ohm load
     """
@@ -30,10 +27,10 @@ def dist2rssi(d, notionaltx=-14, freqHz=2450e6):
 
 
 def rssi2dist(ctx, rssi, rexp=2):
-    ''' simple r^2 loss
+    """ simple r^2 loss
     ctx = transmitter EIRP [dBm] received at 1 meter (reference quantity)
     rssi: currently received signal strength [dBm]
-    '''
+    """
     if ctx > 0:
-        warn('does your BLE transmitter really give {} dBm at one meter distance?'.format(ctx))
-    return (10**((ctx-rssi)/10))**(1/rexp)
+        warn("does your BLE transmitter really give {} dBm at one meter distance?".format(ctx))
+    return (10 ** ((ctx - rssi) / 10)) ** (1 / rexp)
