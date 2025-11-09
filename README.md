@@ -1,5 +1,7 @@
 # Radio Simulations in Python
 
+[![ci](https://github.com/scivision/radio-utils/actions/workflows/ci.yml/badge.svg)](https://github.com/scivision/radio-utils/actions/workflows/ci.yml)
+
 Collection of scripts over the years simulating radio communications
 (commericial and amateur radio).
 
