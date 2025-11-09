@@ -5,16 +5,11 @@
 Collection of scripts over the years simulating radio communications
 (commericial and amateur radio).
 
-## Install
-
 ```sh
 python -m pip install -e .
 ```
 
-## Usage
-
-
-### Rain Attenuation
+## Rain Attenuation
 
 [**ITU P.838 Specific attenuation model for rain for use in prediction methods**](https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.838-3-200503-I!!PDF-E.pdf)
 
@@ -28,19 +23,21 @@ considers:
 Show a plot over whole frequency range by setting frequency `-1`. Show
 replication of ITU report plots with `-v` option.
 
-### SSB mod/demod
+## SSB mod/demod
 
 You can use the `-e` option to introduce a "mistuned" receiver
 frequency.:
 
-    wget http://www.kozco.com/tech/piano2.wav
+```sh
+python scripts/ssbmoddemod.py my.wav
+```
 
-    python ssbmoddemod.py piano2.wav
-
-### Free Space Loss
+## Free Space Loss
 
 1km link at 902MHz with 10mW EIRP transmit power and -85dBm receive
 threshold with 0dBi antenna:
 
-    python free_space_loss.py -h
-    python fspl.py 1e3 902e6 10 -85
+```sh
+python scripts/free_space_loss.py -h
+python scripts/free_space_loss.py 1e3 902e6 10 -85
+```
