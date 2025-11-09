@@ -7,7 +7,7 @@ name = "radioutils"
 version = "1.5.2"
 description = "Low-level radio communications modeling utilities including AM, FM, SSB/DSB demodulation of GNU Radio data"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 keywords = [
 	"GNU Radio",
