@@ -43,5 +43,4 @@ line-length = 99
 
 [tool.mypy]
 ignore_missing_imports = true
-allow_redefinition = true
-files = ["."]
+files = ["src", "scripts"]

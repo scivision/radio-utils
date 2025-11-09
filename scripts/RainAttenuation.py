@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
 """
 Plots reference figures from
 https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.838-3-200503-I!!PDF-E.pdf
@@ -11,6 +12,7 @@ NOTE: to make this useful over a satellite-ground path,
 Example plot: 1-1000 GHz, 40 degree elevation angle, 10 mm/hour, vertical polarization (90 deg):
     ./RainAttenuation.py 10 -1 90 40
 """
+
 import numpy as np
 from matplotlib.pyplot import figure, show
 from argparse import ArgumentParser

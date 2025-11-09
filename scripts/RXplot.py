@@ -8,9 +8,6 @@ from pathlib import Path
 from matplotlib.pyplot import show
 from radioutils import loadbin, fm_demod, playaudio
 from argparse import ArgumentParser
-import seaborn
-
-seaborn.set_context("talk")
 
 fsaudio = 48000  # [Hz], sampling rate of your soundcard for playback
 
