@@ -28,9 +28,7 @@ def main():
     Dm = 40000e3  # slant range [meters]
 
     Lpath = 20 * np.log10(4 * np.pi / c * Dm * freqHz)  # [dB]
-    Lant = (
-        0.0
-    )  # [dB] # assume LNA gain balances cable loss, antenna gain balanced by other uncharacterized losses
+    Lant = 0.0  # [dB] # assume LNA gain balances cable loss, antenna gain balanced by other uncharacterized losses
 
     Seirp = 60 + 30  # [dBm] satellite transmit power EIRP
 

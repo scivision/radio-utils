@@ -56,7 +56,7 @@ def main():
 
 
 def get_rain_atten(f, rainrate, polarization, elevation, verbose=False):
-    """ replicate figures from ITU report """
+    """replicate figures from ITU report"""
 
     rain_atten_dBkm = rain_attenuation(f, rainrate, polarization, elevation)
 

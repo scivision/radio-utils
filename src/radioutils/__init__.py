@@ -1,8 +1,8 @@
 from pathlib import Path
 import logging
+
 import numpy as np
 import scipy.signal as signal
-from typing import Union
 
 
 class Link:
@@ -41,7 +41,7 @@ class Link:
         print(f"for Range [m]= {self.range}  Frequency [MHz]={self.freq_mhz():0.1f}")
 
 
-def playaudio(dat: np.ndarray, fs: int, ofn: Path = None):
+def playaudio(dat, fs: int, ofn: Path | None = None):
     """
     playback radar data using PyGame audio
     """
@@ -56,16 +56,16 @@ def playaudio(dat: np.ndarray, fs: int, ofn: Path = None):
     fs = int(fs)
     # %% rearrange sound array to [N,2] for Numpy playback/writing
     if isinstance(dat.dtype, np.int16):
-        odtype = dat.dtype
-        fnorm = 32768
+        odtype = "int16"
+        fnorm = 32768.0
     elif isinstance(dat.dtype, np.int8):
-        odtype = dat.dtype
-        fnorm = 128
+        odtype = "int8"
+        fnorm = 128.0
     elif dat.dtype in ("complex128", "float64"):
-        odtype = np.float64
+        odtype = "float64"
         fnorm = 1.0
     elif dat.dtype in ("complex64", "float32"):
-        odtype = np.float32
+        odtype = "float32"
         fnorm = 1.0
     else:
         raise TypeError(f"unknown input type {dat.dtype}")
@@ -109,7 +109,7 @@ def playaudio(dat: np.ndarray, fs: int, ofn: Path = None):
         print(f"skipping playback due to fs={fs} Hz")
 
 
-def loadbin(fn: Path, fs: int, tlim=None, isamp=None) -> np.ndarray:
+def loadbin(fn: Path, fs: int, tlim=None, isamp=None):
     """
     we assume single-precision complex64 floating point data
     Often we load data from GNU Radio in complex64 (what Matlab calls complex float32) format.
@@ -159,9 +159,9 @@ def am_demod(
     fsaudio: int,
     fc: float,
     fcutoff: float = 10e3,
-    frumble: float = None,
+    frumble: float | None = None,
     verbose: bool = False,
-) -> np.ndarray:
+):
     """
     Envelope demodulates AM with carrier (DSB or SSB).
     Assumes desired AM signal is centered at zero baseband freq.
@@ -191,14 +191,14 @@ def am_demod(
     # reject signals outside our channel bandwidth
     sig = final_filter(sig, fsaudio, fcutoff, ftype="lpf", verbose=verbose)
     # %% ideal diode: half-wave rectifier
-    sig = sig ** 2
+    sig = sig**2
     # %% optional rumble filter
     sig = final_filter(sig, fsaudio, frumble, ftype="hpf", verbose=verbose)
 
     return sig
 
 
-def downsample(sig: np.ndarray, fs: int, fsaudio: int, verbose: bool = False) -> np.ndarray:
+def downsample(sig, fs: int, fsaudio: int, verbose: bool = False):
     if fs == fsaudio:
         return sig
 
@@ -213,9 +213,7 @@ def downsample(sig: np.ndarray, fs: int, fsaudio: int, verbose: bool = False) ->
     return sig
 
 
-def fm_demod(
-    sig, fs: int, fsaudio: int, fc: float, fmdev=75e3, verbose: bool = False
-) -> np.ndarray:
+def fm_demod(sig, fs: int, fsaudio: int, fc: float, fmdev=75e3, verbose: bool = False):
     """
     currently this function discards all but the monaural audio.
 
@@ -244,9 +242,7 @@ def fm_demod(
     return m
 
 
-def ssb_demod(
-    sig: np.ndarray, fs: int, fsaudio: int, fc: float, fcutoff: float = 5e3, verbose: bool = False
-) -> np.ndarray:
+def ssb_demod(sig, fs: int, fsaudio: int, fc: float, fcutoff: float = 5e3, verbose: bool = False):
     """
     filter method SSB/DSB suppressed carrier demodulation
 
@@ -269,7 +265,7 @@ def ssb_demod(
     return sig
 
 
-def freq_translate(sig: np.ndarray, fc: float, fs: int) -> np.ndarray:
+def freq_translate(sig, fc: float, fs: int):
     # %% assign elapsed time vector
     t = np.arange(sig.size) / fs
     # %% frequency translate
@@ -355,9 +351,7 @@ def bpf_design(fs: int, fcutoff: float, flow: float = 300.0, L: int = 256):
     return b
 
 
-def final_filter(
-    sig: np.ndarray, fs: int, fcutoff: Union[None, float], ftype: str, verbose: bool = False
-) -> np.ndarray:
+def final_filter(sig, fs: int, fcutoff: float | None, ftype: str, verbose: bool = False):
     if fcutoff is None:
         return sig
 

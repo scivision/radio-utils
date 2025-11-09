@@ -105,7 +105,7 @@ def ssbsim(wavfn, rxerr, doplot):
         ax.grid(True)
 
         ax = figure(1).gca()
-        ax.plot(f, 20 * log10(abs(Sm[ns // 2:])))  # plot single-sided spectrum
+        ax.plot(f, 20 * log10(abs(Sm[ns // 2 :])))  # plot single-sided spectrum
         ax.set_xlabel("frequency [Hz]")
         ax.set_ylabel("Modulated waveform [dB]")
         ax.set_title("Transmitted Spectrum X(f)")
@@ -113,7 +113,7 @@ def ssbsim(wavfn, rxerr, doplot):
         ax.grid(True)
 
         ax = figure(2).gca()
-        ax.plot(f, 20 * log10(abs(Rlpf[ns // 2:])))
+        ax.plot(f, 20 * log10(abs(Rlpf[ns // 2 :])))
         ax.set_title("demodulated m spectrm")
         ax.set_xlabel("frequency [Hz]")
         ax.set_ylabel("amplitude [dB]")

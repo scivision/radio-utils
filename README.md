@@ -1,15 +1,13 @@
-[![image](https://travis-ci.org/scivision/radio-utils.svg?branch=master)](https://travis-ci.org/scivision/radio-utils)
-[![image](https://coveralls.io/repos/scivision/radio-utils/badge.svg)](https://coveralls.io/r/scivision/radio-utils)
-
 # Radio Simulations in Python
 
 Collection of scripts over the years simulating radio communications
-(commericial and amateur radio). Python scripts by Michael Hirsch, Ph.D.
+(commericial and amateur radio).
 
 ## Install
 
-
-    python -m pip install -e .
+```sh
+python -m pip install -e .
+```
 
 ## Usage
 

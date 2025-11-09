@@ -1,6 +1,5 @@
 function RXplot(fn,fs, modtype,tss,fc)
 % AM/FM demodulation and plotting of baseband multiplex spectrum
-% Michael Hirsch, Ph.D.
 %
 % Especially useful for spectrum saved from RTL-SDR with GNU Radio, GQRX, etc.
 %
@@ -8,9 +7,6 @@ function RXplot(fn,fs, modtype,tss,fc)
 % tss: start/stop times (seconds) to load (saves big time on enormous
 % files)
 
-try
-  pkg load signal
-end
 
 nbits=16;
 fsaudio = 48e3; % arbitrary for your soundcard

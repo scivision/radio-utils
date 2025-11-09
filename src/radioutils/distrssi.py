@@ -20,14 +20,14 @@ from . import Link
 
 
 def dist2rssi(d, notionaltx: float = -14, freqHz: float = 2450e6):
-    """ compute Friis free space loss
+    """compute Friis free space loss
     notionaltx: conducted transmit power [dBm] into 50 ohm load
     """
     return notionaltx - Link(d, freqHz).fspl()
 
 
 def rssi2dist(ctx, rssi, rexp=2):
-    """ simple r^2 loss
+    """simple r^2 loss
     ctx = transmitter EIRP [dBm] received at 1 meter (reference quantity)
     rssi: currently received signal strength [dBm]
     """

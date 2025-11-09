@@ -1,12 +1,7 @@
 import numpy as np
 import scipy.signal as signal
-import logging
 
-try:
-    from matplotlib.pyplot import figure
-except RuntimeError as e:
-    logging.error(f"plotting unavailable: {e}")
-    figure = None
+from matplotlib.pyplot import figure
 
 
 def plotfir(b, fs):
@@ -77,6 +72,6 @@ def plot_fmbaseband(sig, fs: int, fmax: float):
     ax.set_xlabel("frequency [Hz]")
     ax.set_title("WBFM baseband multiplex: periodogram")
     ax.set_xlim((0, fmax))
-    ax.set_ylim((-80, None))
+    ax.set_ylim(-80, None)
     ax.grid(True)
     fg.tight_layout()

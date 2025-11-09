@@ -1,7 +1,6 @@
 % https://github.com/gnuradio/gnuradio/blob/master/gr-utils/octave/read_complex_binary.m
 %
 % Copyright 2001 Free Software Foundation, Inc.
-% improved by Michael Hirsch, Ph.D.
 
 function v = read_complex_binary (filename, count,start)
 % data = read_complex_binary (filename, [count])
@@ -21,12 +20,12 @@ function v = read_complex_binary (filename, count,start)
     if ~isempty(start)
       fseek(f,(start-1)*Lbyte,'bof');
     end
-    
+
     v = fread (f, [2, count], 'float32=>float32');
     fclose (f);
-    
+
     % have to be column major or Matlab will be horribly slow.
-    v = (v(1,:) + v(2,:)*1i); 
+    v = (v(1,:) + v(2,:)*1i);
     v = v(:);
   end % if
 end % function

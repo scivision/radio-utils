@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-""" selftest """
-import pytest
 from pytest import approx
+
 from radioutils.distrssi import dist2rssi, rssi2dist
 from radioutils import Link
 from radioutils.impairments import rain_attenuation
@@ -18,7 +16,3 @@ def test_fspl():
 
 def test_rainatt():
     assert rain_attenuation(60e9, 10, 45, 40) == approx(4.96584345)
-
-
-if __name__ == "__main__":
-    pytest.main(["-x", __file__])

@@ -1,17 +1,15 @@
-#!/usr/bin/env python
-""" michael hirsch
+#!/usr/bin/env python3
+"""
 1-D simulation of free-space propagation--signal strength differences with omni antennas
 and devices passing at different closest approach distances
 
 This is not what real-life signals would show (except in outer space) due to multipath constructive/destrubtive interference
 """
+
 import numpy as np
 from matplotlib.pyplot import show, subplots
 from radioutils import Link
 from argparse import ArgumentParser
-import seaborn as sns
-
-sns.set_context("poster")
 
 
 def main():

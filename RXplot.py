@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Wideband FM demodulation and plotting of baseband multiplex spectrum
-Michael Hirsch, Ph.D.
 
 Especially useful for spectrum saved from RTL-SDR with GNU Radio, GQRX, etc.
 """

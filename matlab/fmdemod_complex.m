@@ -1,10 +1,11 @@
 function [m,t] = fmdemod_complex(y,fs,fc,fmdev)
+arguments
+    y (:,1)
+    fs (1,1) {mustBeInteger,mustBePositive}
+    fc (1,1) = []
+    fmdev (1,1) {mustBePositive} = 75e3
+end
 %FMDEMOD Frequency demodulation of complex IQ baseband.
-
-narginchk(1,4)
-assert(isvector(y),'expecting complex IQ samples vector, frequency modulated.')
-
-y = y(:);
 
 t =(0:length(y)-1)/fs;
 %% freq shift if necessary

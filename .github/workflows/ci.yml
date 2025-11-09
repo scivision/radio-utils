@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    paths:
+    - "**.py"
+    - .github/workflows/ci.yml
+
+jobs:
+
+  ci:
+    timeout-minutes: 15
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.x"]
+        os: [ubuntu-latest]
+        include:
+        - python-version: "3.x"
+          os: windows-latest
+        - python-version: "3.x"
+          os: macos-latest
+
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - run: pip install .[tests,lint]
+
+    - name: syntax check
+      run: flake8
+
+    - name: type annotation check
+      run: mypy
+
+    - run: pytest
+      timeout-minutes: 2

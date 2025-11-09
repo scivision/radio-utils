@@ -1,5 +1,4 @@
 import numpy as np
-from typing import Union
 
 
 def rain_attenuation(freqHz: float, rainrate: float, polarization, elevation: float):
@@ -11,12 +10,12 @@ def rain_attenuation(freqHz: float, rainrate: float, polarization, elevation: fl
 
     a, k = _rain_coeff(freqHz, polarization, elevation)
     # %% equation 1
-    rain_atten_dBkm = k * rainrate ** a
+    rain_atten_dBkm = k * rainrate**a
 
     return rain_atten_dBkm
 
 
-def _rain_coeff(freqHz: float, polarization: Union[str, float], elevation: float):
+def _rain_coeff(freqHz, polarization: str | float, elevation: float):
     """
     ITU-R P.838-3  Revision 2005 March
     https://www.itu.int/dms_pubrec/itu-r/rec/p/R-REC-P.838-3-200503-I!!PDF-E.pdf
@@ -90,12 +89,12 @@ def _rain_coeff(freqHz: float, polarization: Union[str, float], elevation: float
     # %% compute k (Equation 2)
     logk = mk * logF + Ck
     for j in range(4):
-        logk += ak[j] * np.exp(-((logF - bk[j]) / ck[j]) ** 2)
+        logk += ak[j] * np.exp(-(((logF - bk[j]) / ck[j]) ** 2))
 
-    k = 10.0 ** logk
+    k = 10.0**logk
     # %% compute alpha==a (Equation 3)
     a = ma * logF + Ca
     for j in range(5):
-        a += aa[j] * np.exp(-((logF - ba[j]) / ca[j]) ** 2)
+        a += aa[j] * np.exp(-(((logF - ba[j]) / ca[j]) ** 2))
 
     return a, k
